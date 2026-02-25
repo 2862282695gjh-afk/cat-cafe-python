@@ -2,6 +2,8 @@
 
 A multi-agent chat application with voice input/output support, built with Flask.
 
+**GitHub Repository**: https://github.com/2862282695gjh-afk/cat-cafe-python
+
 ## Features
 
 - Multi-thread conversation management
