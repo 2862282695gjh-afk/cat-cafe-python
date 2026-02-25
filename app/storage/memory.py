@@ -2,6 +2,8 @@
 内存存储（用于测试，不依赖 Redis）
 """
 import time
+import uuid
+import random
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field
 
@@ -34,11 +36,8 @@ class MemoryStorage:
         self.thread_metas: Dict[str, Dict] = {}
         self.thread_list: set = set()
 
-    async def save_message(self, thread_id: str, agent_id: str, content: str,
-                          role: str = 'assistant', process_logs: List[Dict] = None) -> Message:
-        import uuid
-        import random
-
+    def save_message(self, thread_id: str, agent_id: str, content: str,
+                    role: str = 'assistant', process_logs: List[Dict] = None) -> Message:
         key = f"thread:{thread_id}"
         if key not in self.threads:
             self.threads[key] = []
@@ -61,17 +60,17 @@ class MemoryStorage:
         if not meta.get('title') and role == 'user':
             meta['title'] = content[:30] + ('...' if len(content) > 30 else '')
         meta['lastActivity'] = int(time.time() * 1000)
-        await self.set_thread_meta(thread_id, meta)
+        self.set_thread_meta(thread_id, meta)
 
         return message
 
-    async def get_messages(self, thread_id: str) -> List[Dict]:
+    def get_messages(self, thread_id: str) -> List[Dict]:
         key = f"thread:{thread_id}"
         messages = self.threads.get(key, [])
         return [m.to_dict() for m in messages]
 
-    async def get_context(self, thread_id: str) -> str:
-        messages = await self.get_messages(thread_id)
+    def get_context(self, thread_id: str) -> str:
+        messages = self.get_messages(thread_id)
         if not messages:
             return ''
 
@@ -82,16 +81,16 @@ class MemoryStorage:
 
         return '\n\n'.join(lines) + '\n\n'
 
-    async def clear_thread(self, thread_id: str):
+    def clear_thread(self, thread_id: str):
         key = f"thread:{thread_id}"
         self.threads.pop(key, None)
         self.thread_metas.pop(thread_id, None)
         self.thread_list.discard(thread_id)
 
-    async def get_all_threads(self) -> List[Dict]:
+    def get_all_threads(self) -> List[Dict]:
         threads = []
         for thread_id in self.thread_list:
-            meta = await self.get_thread_meta(thread_id)
+            meta = self.get_thread_meta(thread_id)
             threads.append({
                 'id': thread_id,
                 **(meta or {})
@@ -102,10 +101,10 @@ class MemoryStorage:
             return t.get('lastActivity') or t.get('updatedAt') or 0
         return sorted(threads, key=get_time, reverse=True)
 
-    async def get_thread_meta(self, thread_id: str) -> Optional[Dict]:
+    def get_thread_meta(self, thread_id: str) -> Optional[Dict]:
         return self.thread_metas.get(thread_id)
 
-    async def set_thread_meta(self, thread_id: str, meta: Dict):
+    def set_thread_meta(self, thread_id: str, meta: Dict):
         self.thread_list.add(thread_id)
         existing = self.thread_metas.get(thread_id, {})
         updated = {
@@ -116,3 +115,25 @@ class MemoryStorage:
         if not existing.get('createdAt'):
             updated['createdAt'] = updated['updatedAt']
         self.thread_metas[thread_id] = updated
+
+    # 异步兼容方法
+    async def save_message_async(self, *args, **kwargs):
+        return self.save_message(*args, **kwargs)
+
+    async def get_messages_async(self, *args, **kwargs):
+        return self.get_messages(*args, **kwargs)
+
+    async def get_context_async(self, *args, **kwargs):
+        return self.get_context(*args, **kwargs)
+
+    async def clear_thread_async(self, *args, **kwargs):
+        return self.clear_thread(*args, **kwargs)
+
+    async def get_all_threads_async(self, *args, **kwargs):
+        return self.get_all_threads(*args, **kwargs)
+
+    async def get_thread_meta_async(self, *args, **kwargs):
+        return self.get_thread_meta(*args, **kwargs)
+
+    async def set_thread_meta_async(self, *args, **kwargs):
+        return self.set_thread_meta(*args, **kwargs)
