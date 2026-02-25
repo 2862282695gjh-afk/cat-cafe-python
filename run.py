@@ -2,7 +2,6 @@
 """
 Cat Café Python - 启动入口
 """
-import asyncio
 import os
 import sys
 
@@ -13,16 +12,6 @@ from dotenv import load_dotenv
 
 # 加载环境变量
 load_dotenv()
-
-
-def run_async(coro):
-    """运行异步函数的辅助方法"""
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    return loop.run_until_complete(coro)
 
 
 def main():
@@ -42,7 +31,7 @@ def main():
         storage = RedisStorage(os.getenv('REDIS_URL', 'redis://localhost:6379'))
         print('使用 Redis 存储')
         try:
-            run_async(storage.connect())
+            storage.connect()
             print('Redis 已连接')
         except Exception as e:
             print(f'Redis 连接失败，回退到内存存储: {e}')
@@ -133,13 +122,30 @@ def main():
             }
         return jsonify(status)
 
+    def get_agents_status_dict():
+        """返回 agent 状态的字典（用于 socket 发送）"""
+        status = {}
+        for agent_id, agent in agents.items():
+            details = agent_status_details.get(agent_id, {'status': 'idle', 'message': '等待召唤'})
+            status[agent_id] = {
+                'id': agent.id,
+                'name': agent.name,
+                'avatar': agent.avatar,
+                'description': agent.description,
+                'voice': agent.voice,
+                'status': details['status'],
+                'statusMessage': details['message'],
+                'lastUpdate': details['lastUpdate']
+            }
+        return status
+
     @app.route('/api/token-usage')
     def get_token_usage():
         return jsonify(session_token_usage)
 
     @app.route('/api/threads')
     def get_threads():
-        threads = run_async(storage.get_all_threads())
+        threads = storage.get_all_threads()
         return jsonify(threads)
 
     @app.route('/api/threads', methods=['POST'])
@@ -147,36 +153,36 @@ def main():
         data = request.get_json() or {}
         thread_id = str(uuid.uuid4())
         if data.get('title'):
-            run_async(storage.set_thread_meta(thread_id, {'title': data['title']}))
+            storage.set_thread_meta(thread_id, {'title': data['title']})
         return jsonify({'threadId': thread_id})
 
     @app.route('/api/threads/<thread_id>')
     def get_thread(thread_id):
-        meta = run_async(storage.get_thread_meta(thread_id))
-        messages = run_async(storage.get_messages(thread_id))
+        meta = storage.get_thread_meta(thread_id)
+        messages = storage.get_messages(thread_id)
         return jsonify({'id': thread_id, **(meta or {}), 'messages': messages})
 
     @app.route('/api/threads/<thread_id>', methods=['PATCH'])
     def update_thread(thread_id):
         data = request.get_json() or {}
-        run_async(storage.set_thread_meta(thread_id, data))
-        meta = run_async(storage.get_thread_meta(thread_id))
+        storage.set_thread_meta(thread_id, data)
+        meta = storage.get_thread_meta(thread_id)
         return jsonify({'status': 'updated', **(meta or {})})
 
     @app.route('/api/threads/<thread_id>', methods=['DELETE'])
     def delete_thread(thread_id):
-        run_async(storage.clear_thread(thread_id))
+        storage.clear_thread(thread_id)
         return jsonify({'status': 'cleared'})
 
     @app.route('/api/threads/<thread_id>/messages')
-    def get_messages(thread_id):
-        messages = run_async(storage.get_messages(thread_id))
+    def get_messages_route(thread_id):
+        messages = storage.get_messages(thread_id)
         return jsonify(messages)
 
     @app.route('/api/threads/<thread_id>/export')
     def export_thread(thread_id):
-        messages = run_async(storage.get_messages(thread_id))
-        meta = run_async(storage.get_thread_meta(thread_id)) or {}
+        messages = storage.get_messages(thread_id)
+        meta = storage.get_thread_meta(thread_id) or {}
 
         markdown = f"# {meta.get('title', '对话记录')}\n\n"
         markdown += f"> 导出时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n---\n\n"
@@ -237,7 +243,7 @@ def main():
             target_agents = ['opus']
 
         # 保存用户消息
-        run_async(storage.save_message(thread_id, 'user', message, 'user'))
+        storage.save_message(thread_id, 'user', message, 'user')
 
         # 广播用户消息
         user_msg = {
@@ -253,6 +259,7 @@ def main():
         # 启动后台任务处理
         def process_invoke():
             import asyncio
+            import traceback
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
 
@@ -260,9 +267,43 @@ def main():
 
             async def run():
                 try:
+                    print(f'[ProcessInvoke] 开始处理，目标 agents: {target_agents}')
                     async for event in router.route(target_agents, parsed['message'], thread_id, signal):
                         event_type = event.get('type')
                         is_private = event.get('private', True)
+                        agent_id = event.get('agentId')
+                        print(f'[ProcessInvoke] 事件: {event_type}, private: {is_private}')
+
+                        # 更新 agent 状态
+                        if agent_id and agent_id in agent_status_details:
+                            new_status = None
+                            new_message = None
+
+                            if event_type == 'start':
+                                new_status = 'thinking'
+                                new_message = '正在思考...'
+                            elif event_type == 'status':
+                                new_status = event.get('status', 'thinking')
+                                new_message = event.get('message', '')
+                            elif event_type == 'stream':
+                                new_status = 'streaming'
+                                new_message = '正在回复...'
+                            elif event_type == 'complete':
+                                new_status = 'idle'
+                                new_message = '等待召唤'
+
+                            if new_status:
+                                agent_status_details[agent_id] = {
+                                    'status': new_status,
+                                    'message': new_message,
+                                    'lastUpdate': int(time.time() * 1000)
+                                }
+                                # 广播状态更新到所有客户端
+                                socketio.emit('agent-status-update', {
+                                    'agentId': agent_id,
+                                    'status': new_status,
+                                    'message': new_message
+                                }, namespace='/')
 
                         if event_type == 'complete':
                             socketio.emit('event', event, room=thread_id)
@@ -274,10 +315,29 @@ def main():
                             socketio.emit('status-event', event, room=thread_id)
                 except Exception as e:
                     print(f'[Error] {e}')
+                    traceback.print_exc()
                     socketio.emit('event', {'type': 'error', 'message': str(e)}, room=thread_id)
+                    # 出错时重置所有 agent 状态
+                    for aid in target_agents:
+                        if aid in agent_status_details:
+                            agent_status_details[aid] = {
+                                'status': 'idle',
+                                'message': '等待召唤',
+                                'lastUpdate': int(time.time() * 1000)
+                            }
+                            socketio.emit('agent-status-update', {
+                                'agentId': aid,
+                                'status': 'idle',
+                                'message': '等待召唤'
+                            }, namespace='/')
 
-            loop.run_until_complete(run())
-            loop.close()
+            try:
+                loop.run_until_complete(run())
+            except Exception as e:
+                print(f'[ThreadError] {e}')
+                traceback.print_exc()
+            finally:
+                loop.close()
 
         import threading
         thread = threading.Thread(target=process_invoke)
@@ -356,6 +416,63 @@ def main():
 
         return jsonify({'status': 'deleted'})
 
+    # ===== 记忆管理 API =====
+
+    @app.route('/api/agents/<agent_id>/memory')
+    def get_agent_memory(agent_id):
+        """获取猫咪的长期记忆"""
+        memory = storage.get_long_memory(agent_id)
+        return jsonify(memory or {})
+
+    @app.route('/api/agents/<agent_id>/memory', methods=['POST'])
+    def add_agent_memory(agent_id):
+        """添加猫咪的长期记忆"""
+        data = request.get_json() or {}
+        key = data.get('key')
+        value = data.get('value')
+
+        if not key or not value:
+            return jsonify({'error': 'key 和 value 不能为空'}), 400
+
+        storage.add_memory_entry(agent_id, key, value)
+        memory = storage.get_long_memory(agent_id)
+        return jsonify({'status': 'ok', 'memory': memory})
+
+    @app.route('/api/agents/<agent_id>/memory/<key>', methods=['DELETE'])
+    def delete_agent_memory(agent_id, key):
+        """删除猫咪的特定记忆"""
+        storage.remove_memory_entry(agent_id, key)
+        return jsonify({'status': 'deleted'})
+
+    @app.route('/api/threads/<thread_id>/session')
+    def get_session_state(thread_id):
+        """获取会话状态"""
+        state = storage.get_session_state(thread_id)
+        pending = storage.get_pending_tool(thread_id)
+        return jsonify({
+            'state': state or {},
+            'pendingTool': pending
+        })
+
+    @app.route('/api/threads/<thread_id>/session', methods=['DELETE'])
+    def clear_session(thread_id):
+        """清除会话状态"""
+        storage.clear_session_state(thread_id)
+        storage.clear_pending_tool(thread_id)
+        return jsonify({'status': 'cleared'})
+
+    @app.route('/api/threads/<thread_id>/pending-tool')
+    def get_pending_tool(thread_id):
+        """获取待确认的工具"""
+        pending = storage.get_pending_tool(thread_id)
+        return jsonify(pending or {})
+
+    @app.route('/api/threads/<thread_id>/pending-tool', methods=['DELETE'])
+    def clear_pending_tool(thread_id):
+        """清除待确认的工具"""
+        storage.clear_pending_tool(thread_id)
+        return jsonify({'status': 'cleared'})
+
     @app.route('/api/token-budget', methods=['POST'])
     def set_budget():
         data = request.get_json() or {}
@@ -377,9 +494,9 @@ def main():
 
     # WebSocket 事件
     @socketio.on('connect')
-    def handle_connect():
+    def handle_connect(auth=None):
         print(f'客户端连接: {request.sid}')
-        emit('agents-status', get_agents_status())
+        emit('agents-status', get_agents_status_dict())
         emit('token-usage', session_token_usage)
 
     @socketio.on('join')

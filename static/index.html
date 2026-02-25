@@ -406,10 +406,7 @@
     }
 
     .stop-btn {
-      position: absolute;
-      right: 0;
-      top: -40px;
-      padding: 8px 16px;
+      padding: 10px 20px;
       background: #ff6b6b;
       color: white;
       border: none;
@@ -780,6 +777,148 @@
       color: #856404;
       margin: 8px 0;
     }
+
+    /* 记忆管理面板 */
+    .memory-panel {
+      margin-top: 8px;
+      padding: 8px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    .memory-panel h4 {
+      margin-bottom: 6px;
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: 2px 0;
+    }
+
+    .memory-panel h4:hover { color: #667eea; }
+
+    .memory-list {
+      max-height: 100px;
+      overflow-y: auto;
+      margin-bottom: 6px;
+    }
+
+    .memory-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 6px;
+      background: white;
+      border-radius: 4px;
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    .memory-item .key { font-weight: 500; color: #667eea; }
+    .memory-item .value { color: #666; flex: 1; margin-left: 8px; }
+    .memory-item .delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #999;
+      padding: 0 4px;
+    }
+
+    .memory-item .delete-btn:hover { color: #e74c3c; }
+
+    .memory-add-form {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .memory-add-form input {
+      flex: 1;
+      padding: 3px 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 11px;
+      min-width: 0;
+    }
+
+    .memory-add-form button {
+      padding: 3px 8px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    /* 待确认工具提示 */
+    .pending-tool-banner {
+      padding: 8px 12px;
+      background: #fff3cd;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pending-tool-banner .tool-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pending-tool-banner .tool-name {
+      font-weight: 500;
+      color: #856404;
+    }
+
+    .pending-tool-banner .tool-desc {
+      font-size: 11px;
+      color: #666;
+    }
+
+    .pending-tool-banner .clear-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #999;
+      font-size: 16px;
+    }
+
+    .pending-tool-banner .clear-btn:hover { color: #e74c3c; }
+
+    /* 会话控制按钮 */
+    .session-controls {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .session-controls button {
+      flex: 1;
+      padding: 4px 8px;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 10px;
+      color: #666;
+    }
+
+    .session-controls button:hover {
+      background: #eee;
+      color: #333;
+    }
+
+    .session-controls button.danger:hover {
+      background: #fee;
+      color: #c00;
+      border-color: #fcc;
+    }
   </style>
 </head>
 <body>
@@ -1095,6 +1234,89 @@
       );
     }
 
+    // 长期记忆面板
+    function MemoryPanel({ agentId, memory, onAdd, onDelete }) {
+      const [key, setKey] = useState('');
+      const [value, setValue] = useState('');
+      const [expanded, setExpanded] = useState(false);
+
+      const handleAdd = () => {
+        if (key.trim() && value.trim()) {
+          onAdd(key.trim(), value.trim());
+          setKey('');
+          setValue('');
+        }
+      };
+
+      // 过滤掉元数据
+      const memoryItems = Object.entries(memory || {}).filter(
+        ([k]) => !['updatedAt', 'createdAt'].includes(k)
+      );
+
+      return (
+        <div className="memory-panel">
+          <h4 onClick={() => setExpanded(!expanded)}>
+            <span>{expanded ? '▼' : '▶'} 🧠 长期记忆 ({memoryItems.length})</span>
+          </h4>
+          {expanded && (
+            <>
+              <div className="memory-list">
+                {memoryItems.map(([k, v]) => (
+                  <div key={k} className="memory-item">
+                    <span className="key">{k}</span>
+                    <span className="value">{v}</span>
+                    <button className="delete-btn" onClick={() => onDelete(k)}>×</button>
+                  </div>
+                ))}
+              </div>
+              <div className="memory-add-form">
+                <input
+                  value={key}
+                  onChange={e => setKey(e.target.value)}
+                  placeholder="键"
+                />
+                <input
+                  value={value}
+                  onChange={e => setValue(e.target.value)}
+                  placeholder="值"
+                />
+                <button onClick={handleAdd}>+</button>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // 待确认工具横幅
+    function PendingToolBanner({ pendingTool, onClear }) {
+      if (!pendingTool) return null;
+
+      return (
+        <div className="pending-tool-banner">
+          <div className="tool-info">
+            <span>⏳</span>
+            <div>
+              <div className="tool-name">待确认: {pendingTool.name}</div>
+              <div className="tool-desc">{pendingTool.description || '等待确认...'}</div>
+            </div>
+          </div>
+          <button className="clear-btn" onClick={onClear} title="取消">×</button>
+        </div>
+      );
+    }
+
+    // 会话控制面板
+    function SessionControls({ threadId, onClear }) {
+      return (
+        <div className="session-controls">
+          <button onClick={() => onClear(threadId)} className="danger" title="清除会话状态和待确认操作">
+            清除会话
+          </button>
+        </div>
+      );
+    }
+
     // 消息气泡
     function MessageBubble({ message, agentInfo, callerInfo, isStreaming, vocabulary, autoSpeak }) {
       const isUser = message.role === 'user';
@@ -1258,7 +1480,7 @@
     }
 
     // 输入框
-    function InputBox({ onSend, disabled }) {
+    function InputBox({ onSend, disabled, onStop, showStop }) {
       const [input, setInput] = useState('');
       const [isRecording, setIsRecording] = useState(false);
       const recognitionRef = useRef(null);
@@ -1325,9 +1547,13 @@
               {isRecording ? '⏹️' : '🎤'}
             </button>
           )}
-          <button type="submit" disabled={disabled || !input.trim()}>
-            {disabled ? '处理中...' : '发送'}
-          </button>
+          {showStop ? (
+            <button type="button" className="stop-btn" onClick={onStop}>停止</button>
+          ) : (
+            <button type="submit" disabled={disabled || !input.trim()}>
+              发送
+            </button>
+          )}
         </form>
       );
     }
@@ -1358,15 +1584,10 @@
         return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
       };
 
-      // 详细调试：打印所有日志的类型
-      console.log('[ProcessLogPanel] 所有日志类型:', logs?.map(l => l.type).join(', '));
-      console.log('[ProcessLogPanel] 完整日志:', JSON.stringify(logs, null, 2));
-
       if (!logs || logs.length === 0) return null;
 
       // 获取工具调用的摘要显示
       const getToolSummary = (name, input) => {
-        console.log('[getToolSummary] name:', name, 'input:', input);
         if (!input) return name;
 
         // 根据工具类型提取关键信息
@@ -1414,19 +1635,22 @@
           {logs.map((log, idx) => {
             const isExpanded = expandedIdx === idx;
 
-            // 判断是否有详细内容可展开
-            const hasDetail = (log.type === 'thinking' && log.text?.length > 80) ||
+            // 判断是否有详细内容可展开（默认展开所有 thinking 内容）
+            const hasDetail = (log.type === 'thinking' && log.text?.length > 50) ||
                              (log.type === 'tool' && log.input);
 
             // 获取摘要内容
             const getSummary = () => {
               if (log.type === 'thinking') {
-                // 思考内容直接显示前80字符
-                return log.text?.slice(0, 80) + (log.text?.length > 80 ? '...' : '');
+                // 思考内容显示更多（200字符）
+                return log.text?.slice(0, 200) + (log.text?.length > 200 ? '...' : '');
               }
               if (log.type === 'tool') {
-                // 显示工具名和关键参数
                 return getToolSummary(log.name, log.input);
+              }
+              if (log.type === 'status') {
+                // status 类型显示消息
+                return log.message || log.status;
               }
               return log.message;
             };
@@ -1442,12 +1666,25 @@
               return null;
             };
 
+            // 获取图标
+            const getIcon = () => {
+              if (log.type === 'thinking') return '💭';
+              if (log.type === 'tool') return '🔧';
+              if (log.type === 'status') {
+                if (log.status === 'thinking') return '🧠';
+                if (log.status === 'streaming') return '✍️';
+                if (log.status === 'idle') return '✅';
+                if (log.status === 'retry') return '🔄';
+                return '📊';
+              }
+              return '📊';
+            };
+
             return (
               <div key={idx} className="process-log-item">
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4 }}>
                   <span className={`log-type ${log.type}`}>
-                    {log.type === 'thinking' ? '💭' :
-                     log.type === 'tool' ? '🔧' : '📊'}
+                    {getIcon()}
                   </span>
                   <span className="log-content" style={{ flex: 1, fontSize: 11 }}>
                     {getSummary()}
@@ -1471,7 +1708,7 @@
                     fontSize: '11px',
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-word',
-                    maxHeight: '200px',
+                    maxHeight: '300px',
                     overflow: 'auto',
                     border: '1px solid #eee'
                   }}>
@@ -1503,6 +1740,8 @@
       const [a2aMap, setA2aMap] = useState({}); // agentId -> callerId 映射
       const [autoSpeak, setAutoSpeak] = useState(false); // 自动朗读开关
       const [vocabulary, setVocabulary] = useState({}); // 自定义词汇表
+      const [agentMemory, setAgentMemory] = useState({}); // 当前猫咪的长期记忆
+      const [pendingTool, setPendingTool] = useState(null); // 待确认的工具
       const socketRef = useRef(null);
       const messagesEndRef = useRef(null);
       const threadIdRef = useRef(null);
@@ -1608,6 +1847,21 @@
                 timestamp: Date.now()
               }]);
               break;
+            case 'pending_confirmation':
+              console.log('[前端] 待确认操作:', event);
+              setPendingTool({
+                name: event.tool,
+                description: event.description,
+                input: event.input,
+                agentId: event.agentId
+              });
+              setMessages(prev => [...prev, {
+                id: `pending-${Date.now()}`, threadId: threadIdRef.current,
+                agentId: event.agentId, role: 'assistant',
+                content: `⏳ 需要确认: ${event.description || event.tool}\n\n请回复"确认"继续执行，或回复"取消"放弃操作。`,
+                timestamp: Date.now()
+              }]);
+              break;
             case 'error':
               console.error('错误:', event.message);
               setLoading(false);
@@ -1662,8 +1916,17 @@
             .then(res => res.json())
             .then(data => setMessages(data))
             .catch(err => console.error('加载消息失败:', err));
+          // 加载待确认工具
+          loadPendingTool(threadId);
         }
       }, [threadId]);
+
+      // 当 currentAgent 变化时加载长期记忆
+      useEffect(() => {
+        if (currentAgent?.id) {
+          loadAgentMemory(currentAgent.id);
+        }
+      }, [currentAgent?.id]);
 
       useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -1766,6 +2029,64 @@
         } catch (err) { console.error('删除词汇失败:', err); }
       };
 
+      // 加载当前猫咪的长期记忆
+      const loadAgentMemory = async (agentId) => {
+        if (!agentId) return;
+        try {
+          const res = await fetch(`/api/agents/${agentId}/memory`);
+          setAgentMemory(await res.json());
+        } catch (err) { console.error('加载记忆失败:', err); }
+      };
+
+      // 添加长期记忆
+      const handleAddMemory = async (key, value) => {
+        const agentId = currentAgent?.id || 'opus';
+        try {
+          await fetch(`/api/agents/${agentId}/memory`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key, value })
+          });
+          loadAgentMemory(agentId);
+        } catch (err) { console.error('添加记忆失败:', err); }
+      };
+
+      // 删除长期记忆
+      const handleDeleteMemory = async (key) => {
+        const agentId = currentAgent?.id || 'opus';
+        try {
+          await fetch(`/api/agents/${agentId}/memory/${encodeURIComponent(key)}`, { method: 'DELETE' });
+          loadAgentMemory(agentId);
+        } catch (err) { console.error('删除记忆失败:', err); }
+      };
+
+      // 加载待确认工具
+      const loadPendingTool = async (tid) => {
+        if (!tid) return;
+        try {
+          const res = await fetch(`/api/threads/${tid}/pending-tool`);
+          const data = await res.json();
+          setPendingTool(Object.keys(data).length > 0 ? data : null);
+        } catch (err) { console.error('加载待确认工具失败:', err); }
+      };
+
+      // 清除待确认工具
+      const handleClearPendingTool = async () => {
+        try {
+          await fetch(`/api/threads/${threadId}/pending-tool`, { method: 'DELETE' });
+          setPendingTool(null);
+        } catch (err) { console.error('清除待确认工具失败:', err); }
+      };
+
+      // 清除会话状态
+      const handleClearSession = async (tid) => {
+        if (!confirm('确定要清除会话状态吗？这将清除待确认的操作。')) return;
+        try {
+          await fetch(`/api/threads/${tid}/session`, { method: 'DELETE' });
+          setPendingTool(null);
+        } catch (err) { console.error('清除会话失败:', err); }
+      };;
+
       const currentThread = threads.find(t => t.id === threadId);
 
       return (
@@ -1795,6 +2116,15 @@
               onAdd={handleAddVocab}
               onDelete={handleDeleteVocab}
             />
+
+            <MemoryPanel
+              agentId={currentAgent?.id || 'opus'}
+              memory={agentMemory}
+              onAdd={handleAddMemory}
+              onDelete={handleDeleteMemory}
+            />
+
+            <SessionControls threadId={threadId} onClear={handleClearSession} />
           </div>
 
           <div className="chat-area">
@@ -1803,6 +2133,8 @@
                 <div className="chat-header">
                   <h2>{currentThread?.title || '新对话'}</h2>
                 </div>
+
+                <PendingToolBanner pendingTool={pendingTool} onClear={handleClearPendingTool} />
 
                 <div className="messages-container">
                   {messages.map(msg => (
@@ -1862,8 +2194,7 @@
                 </div>
 
                 <div className="input-area">
-                  {loading && <button className="stop-btn" onClick={handleStop}>停止</button>}
-                  <InputBox onSend={handleSend} disabled={loading} />
+                  <InputBox onSend={handleSend} disabled={loading} onStop={handleStop} showStop={loading} />
                 </div>
               </>
             ) : (
