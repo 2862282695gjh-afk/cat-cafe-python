@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cat Café Mini</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/socket.io-client@4/dist/socket.io.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    #root { display: flex; height: 100vh; }
+
+    /* 侧边栏 */
+    .sidebar {
+      width: 280px;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .sidebar-header h1 { font-size: 20px; color: #333; }
+    .sidebar-header p { font-size: 12px; color: #666; margin-top: 4px; }
+
+    /* Token 使用量面板 */
+    .token-panel {
+      padding: 12px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #eee;
+    }
+
+    .token-panel h4 {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .token-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .token-bar {
+      height: 6px;
+      background: #e0e0e0;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .token-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.3s;
+    }
+
+    .token-bar-fill.warning { background: #f39c12; }
+    .token-bar-fill.danger { background: #e74c3c; }
+
+    .token-cost {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    /* 对话列表 */
+    .thread-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .thread-item {
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .thread-item:hover { background: #f5f5f5; }
+    .thread-item.active { background: #667eea; color: white; }
+
+    .thread-item .title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+    }
+
+    .thread-item .delete-btn {
+      opacity: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 4px;
+    }
+
+    .thread-item:hover .delete-btn { opacity: 0.6; }
+    .thread-item.active .delete-btn { color: white; }
+
+    /* 线程操作按钮 */
+    .thread-actions {
+      display: flex;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .thread-item:hover .thread-actions { opacity: 1; }
+
+    .thread-action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px 4px;
+      color: inherit;
+      opacity: 0.6;
+    }
+
+    .thread-action-btn:hover { opacity: 1; }
+    .thread-item.active .thread-action-btn { color: white; }
+
+    /* 已归档线程区域 */
+    .archived-section {
+      border-top: 1px solid #eee;
+      padding: 8px;
+      margin-top: 8px;
+    }
+
+    .archived-header {
+      font-size: 12px;
+      color: #999;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 0;
+    }
+
+    .archived-header:hover { color: #667eea; }
+
+    .archived-list {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .thread-item.archived {
+      opacity: 0.6;
+      font-size: 12px;
+      padding: 8px;
+    }
+
+    .thread-item.archived .title {
+      text-decoration: line-through;
+    }
+
+    .thread-time {
+      font-size: 10px;
+      color: #999;
+      margin-left: 4px;
+    }
+
+    .new-thread-btn {
+      margin: 8px;
+      padding: 12px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .new-thread-btn:hover { background: #5a6fd6; }
+
+    /* 猫咪面板 */
+    .agent-panel {
+      border-top: 1px solid #eee;
+      padding: 12px;
+    }
+
+    .agent-panel h3 { font-size: 14px; color: #333; margin-bottom: 8px; }
+
+    .agent-list {
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .agent-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      background: #fafafa;
+      transition: all 0.2s;
+    }
+
+    .agent-item.active {
+      background: #f0f4ff;
+      border-left: 3px solid #667eea;
+    }
+
+    .agent-item .avatar {
+      margin-right: 10px;
+      font-size: 24px;
+    }
+
+    .agent-item .info { flex: 1; }
+
+    .agent-item .name {
+      font-weight: 500;
+      color: #333;
+    }
+
+    .agent-item .status {
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .agent-item .status.idle { color: #27ae60; }
+    .agent-item .status.thinking { color: #3498db; }
+    .agent-item .status.tool { color: #9b59b6; }
+    .agent-item .status.streaming { color: #2ecc71; }
+    .agent-item .status.retry { color: #e67e22; }
+
+    .agent-item .status-icon {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+      animation: pulse 1s infinite;
+    }
+
+    .agent-item .status-icon.idle {
+      background: #27ae60;
+      animation: none;
+    }
+
+    .agent-item .status-icon.thinking { background: #3498db; }
+    .agent-item .status-icon.tool { background: #9b59b6; }
+    .agent-item .status-icon.streaming { background: #2ecc71; }
+    .agent-item .status-icon.retry { background: #e67e22; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .agent-item .delete-btn {
+      opacity: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0 4px;
+    }
+
+    .agent-item:hover .delete-btn { opacity: 0.6; }
+
+    .add-agent-btn {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      background: #f5f5f5;
+      border: 1px dashed #ccc;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .add-agent-btn:hover { background: #eee; }
+
+    /* 聊天区域 */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .chat-header {
+      background: white;
+      border-radius: 16px;
+      padding: 16px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .chat-header h2 { font-size: 18px; color: #333; }
+
+    .messages-container {
+      flex: 1;
+      overflow: auto;
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .message-bubble {
+      display: flex;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+
+    .message-bubble.user { flex-direction: row-reverse; }
+
+    .message-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin: 0 12px;
+    }
+
+    .message-bubble.user .message-avatar { background: #667eea; }
+
+    .message-content {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      background: #f0f0f0;
+    }
+
+    .message-bubble.user .message-content {
+      background: #667eea;
+      color: white;
+    }
+
+    .message-sender {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .message-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .input-area { position: relative; }
+
+    .input-form {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .input-form input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      border-radius: 24px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .input-form button {
+      padding: 12px 24px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 24px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .input-form button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .stop-btn {
+      position: absolute;
+      right: 0;
+      top: -40px;
+      padding: 8px 16px;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .loading-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #f0f0f0;
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+
+    .loading-indicator .retry-text {
+      color: #e67e22;
+      font-style: italic;
+    }
+
+    /* A2A 指示器 */
+    .a2a-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #666;
+      background: #f0f0f0;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 8px;
+    }
+
+    .a2a-indicator .arrow {
+      color: #667eea;
+    }
+
+    .message-sender-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    .message-text .mention {
+      color: #667eea;
+      font-weight: 500;
+      background: #f0f4ff;
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+
+    /* 过程日志面板 */
+    .process-logs-toggle {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #888;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .process-logs-toggle:hover {
+      color: #667eea;
+    }
+
+    .process-logs-panel {
+      margin-top: 8px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      border-left: 3px solid #667eea;
+    }
+
+    .process-logs-panel.live {
+      background: #f0f4ff;
+      border-left: 3px solid #667eea;
+      animation: pulse-border 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-border {
+      0%, 100% { border-left-color: #667eea; }
+      50% { border-left-color: #a5b4fc; }
+    }
+
+    .process-log-item {
+      padding: 4px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .process-log-item:last-child {
+      border-bottom: none;
+    }
+
+    .process-log-item .log-type {
+      font-weight: 500;
+      color: #667eea;
+      margin-right: 8px;
+    }
+
+    .process-log-item .log-type.tool {
+      color: #9b59b6;
+    }
+
+    .process-log-item .log-type.thinking {
+      color: #3498db;
+    }
+
+    .process-log-item .log-type.status {
+      color: #27ae60;
+    }
+
+    .process-log-item .log-content {
+      color: #555;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .process-log-item .log-time {
+      color: #aaa;
+      font-size: 10px;
+      margin-left: 8px;
+    }
+
+    /* 弹窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      width: 400px;
+      max-width: 90%;
+    }
+
+    .modal h3 { margin-bottom: 16px; font-size: 18px; }
+
+    .modal label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .modal input,
+    .modal textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .modal textarea { height: 100px; resize: vertical; }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+
+    .modal-buttons button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .modal-buttons .cancel-btn { background: #f5f5f5; }
+    .modal-buttons .confirm-btn { background: #667eea; color: white; }
+
+    /* 语音按钮样式 */
+    .voice-btn {
+      background: #667eea;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: white;
+      transition: all 0.2s;
+    }
+
+    .voice-btn:hover { background: #5a6fd6; }
+
+    .voice-btn.recording {
+      background: #e74c3c;
+      animation: pulse-scale 1s infinite;
+    }
+
+    @keyframes pulse-scale {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+    }
+
+    .voice-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* 消息朗读按钮 */
+    .speak-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 6px;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .speak-btn:hover { opacity: 1; }
+    .speak-btn.speaking { color: #667eea; opacity: 1; }
+
+    /* 语音设置面板 */
+    .voice-settings {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 10px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-top: 8px;
+      font-size: 11px;
+      border-top: 1px solid #eee;
+    }
+
+    .voice-settings label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .voice-toggle {
+      position: relative;
+      width: 32px;
+      height: 18px;
+      background: #ccc;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .voice-toggle.active { background: #667eea; }
+
+    .voice-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .voice-toggle.active::after { transform: translateX(14px); }
+
+    /* 词汇表面板 */
+    .vocab-panel {
+      margin-top: 8px;
+      padding: 8px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    .vocab-panel h4 {
+      margin-bottom: 6px;
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: 2px 0;
+    }
+
+    .vocab-panel h4:hover { color: #667eea; }
+
+    .vocab-list {
+      max-height: 100px;
+      overflow-y: auto;
+      margin-bottom: 6px;
+    }
+
+    .vocab-list:empty { display: none; }
+
+    .vocab-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 3px 6px;
+      background: white;
+      border-radius: 4px;
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    .vocab-item .word { font-weight: 500; }
+    .vocab-item .pronunciation { color: #666; }
+    .vocab-item .delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #999;
+      padding: 0 4px;
+    }
+
+    .vocab-item .delete-btn:hover { color: #e74c3c; }
+
+    .vocab-add-form {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .vocab-add-form input {
+      flex: 1;
+      padding: 3px 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 11px;
+      min-width: 0;
+    }
+
+    .vocab-add-form button {
+      padding: 3px 8px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    /* 浏览器兼容性提示 */
+    .browser-warning {
+      padding: 8px 12px;
+      background: #fff3cd;
+      border-radius: 8px;
+      font-size: 12px;
+      color: #856404;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // 状态图标映射
+    const STATUS_ICONS = {
+      idle: '💤',
+      thinking: '🧠',
+      tool: '🔧',
+      streaming: '💬',
+      retry: '🔄'
+    };
+
+    // 弹窗组件
+    function Modal({ title, children, onClose }) {
+      return (
+        <div className="modal-overlay" onClick={onClose}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>{title}</h3>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    // 新建对话弹窗
+    function CreateThreadModal({ onClose, onCreate }) {
+      const [title, setTitle] = useState('');
+
+      return (
+        <Modal title="新建对话" onClose={onClose}>
+          <label>对话名称</label>
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="输入对话名称（可选）"
+            autoFocus
+            onKeyDown={e => { if (e.key === 'Enter') onCreate(title.trim() || '新对话'); }}
+          />
+          <div className="modal-buttons">
+            <button className="cancel-btn" onClick={onClose}>取消</button>
+            <button className="confirm-btn" onClick={() => onCreate(title.trim() || '新对话')}>创建</button>
+          </div>
+        </Modal>
+      );
+    }
+
+    // 重命名对话弹窗
+    function RenameThreadModal({ thread, onClose, onRename }) {
+      const [title, setTitle] = useState(thread?.title || '');
+
+      return (
+        <Modal title="重命名对话" onClose={onClose}>
+          <label>对话名称</label>
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="输入新名称"
+            autoFocus
+            onKeyDown={e => { if (e.key === 'Enter' && title.trim()) { onRename(thread.id, title.trim()); onClose(); } }}
+          />
+          <div className="modal-buttons">
+            <button className="cancel-btn" onClick={onClose}>取消</button>
+            <button className="confirm-btn" onClick={() => { if (title.trim()) { onRename(thread.id, title.trim()); onClose(); } }}>保存</button>
+          </div>
+        </Modal>
+      );
+    }
+
+    // 注册猫咪弹窗
+    function RegisterAgentModal({ onClose, onRegister }) {
+      const [name, setName] = useState('');
+      const [avatar, setAvatar] = useState('🐱');
+      const [description, setDescription] = useState('');
+      const [systemPrompt, setSystemPrompt] = useState('你是一只可爱的猫咪，喜欢帮助人类，用温柔友善的方式回答问题。');
+
+      const avatars = ['🐱', '🐈', '😺', '😸', '😻', '🙀', '😿', '😾', '🐯', '🦁'];
+
+      return (
+        <Modal title="注册新猫咪" onClose={onClose}>
+          <label>名称 *</label>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="例如：小橘猫" />
+
+          <label>头像</label>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+            {avatars.map(a => (
+              <button key={a} onClick={() => setAvatar(a)} style={{
+                fontSize: 24, padding: 8,
+                border: avatar === a ? '2px solid #667eea' : '1px solid #ddd',
+                borderRadius: 8, background: 'white', cursor: 'pointer'
+              }}>{a}</button>
+            ))}
+          </div>
+
+          <label>简介</label>
+          <input value={description} onChange={e => setDescription(e.target.value)} placeholder="例如：一只活泼的小猫" />
+
+          <label>个性描述</label>
+          <textarea value={systemPrompt} onChange={e => setSystemPrompt(e.target.value)}
+            placeholder="描述这只猫咪的性格特点、说话风格等（可选，有默认值）" />
+
+          <div className="modal-buttons">
+            <button className="cancel-btn" onClick={onClose}>取消</button>
+            <button className="confirm-btn" onClick={() => {
+              if (!name.trim()) { alert('请填写猫咪名称'); return; }
+              onRegister({ name, avatar, description, systemPrompt });
+            }}>注册</button>
+          </div>
+        </Modal>
+      );
+    }
+
+    // Token 使用量面板
+    function TokenPanel({ usage }) {
+      const percentage = usage.budget > 0 ? (usage.cost / usage.budget) * 100 : 0;
+      const barClass = percentage > 80 ? 'danger' : percentage > 50 ? 'warning' : '';
+
+      return (
+        <div className="token-panel">
+          <h4>📊 Session 消耗</h4>
+          <div className="token-stats">
+            <span>输入: {usage.input.toLocaleString()}</span>
+            <span>输出: {usage.output.toLocaleString()}</span>
+            <span>总计: {usage.total.toLocaleString()}</span>
+          </div>
+          <div className="token-bar">
+            <div className={`token-bar-fill ${barClass}`} style={{ width: `${Math.min(percentage, 100)}%` }} />
+          </div>
+          <div className="token-cost">
+            ${usage.cost.toFixed(4)} / ${usage.budget.toFixed(2)} 预算
+          </div>
+        </div>
+      );
+    }
+
+    // 对话列表
+    function ThreadList({ threads, activeThreadId, onSelect, onDelete, onArchive, onRename, onExport }) {
+      const [showArchived, setShowArchived] = useState(false);
+
+      // 分离活跃和已归档的线程
+      const activeThreads = threads.filter(t => !t.archived);
+      const archivedThreads = threads.filter(t => t.archived);
+
+      // 格式化时间
+      const formatTime = (ts) => {
+        if (!ts) return '';
+        const d = new Date(ts);
+        const now = new Date();
+        const diff = now - d;
+        if (diff < 60000) return '刚刚';
+        if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
+        if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
+        if (diff < 604800000) return `${Math.floor(diff / 86400000)} 天前`;
+        return d.toLocaleDateString('zh-CN');
+      };
+
+      const handleExport = async (threadId) => {
+        window.open(`/api/threads/${threadId}/export`, '_blank');
+      };
+
+      return (
+        <div className="thread-list">
+          {activeThreads.map(thread => (
+            <div key={thread.id}
+              className={`thread-item ${thread.id === activeThreadId ? 'active' : ''}`}
+              onClick={() => onSelect(thread.id)}>
+              <span className="title">
+                {thread.title || '新对话'}
+                <span className="thread-time">{formatTime(thread.lastActivity || thread.updatedAt)}</span>
+              </span>
+              <div className="thread-actions">
+                <button className="thread-action-btn" onClick={e => { e.stopPropagation(); onRename(thread); }} title="重命名">✏️</button>
+                <button className="thread-action-btn" onClick={e => { e.stopPropagation(); handleExport(thread.id); }} title="导出">📥</button>
+                <button className="thread-action-btn" onClick={e => { e.stopPropagation(); onArchive(thread.id, true); }} title="归档">📁</button>
+                <button className="thread-action-btn" onClick={e => { e.stopPropagation(); onDelete(thread.id); }} title="删除">🗑️</button>
+              </div>
+            </div>
+          ))}
+
+          {archivedThreads.length > 0 && (
+            <div className="archived-section">
+              <div className="archived-header" onClick={() => setShowArchived(!showArchived)}>
+                {showArchived ? '▼' : '▶'} 已归档 ({archivedThreads.length})
+              </div>
+              {showArchived && (
+                <div className="archived-list">
+                  {archivedThreads.map(thread => (
+                    <div key={thread.id}
+                      className="thread-item archived"
+                      onClick={() => onSelect(thread.id)}>
+                      <span className="title">{thread.title || '新对话'}</span>
+                      <div className="thread-actions">
+                        <button className="thread-action-btn" onClick={e => { e.stopPropagation(); onArchive(thread.id, false); }} title="恢复">↩️</button>
+                        <button className="thread-action-btn" onClick={e => { e.stopPropagation(); onDelete(thread.id); }} title="删除">🗑️</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 猫咪面板
+    function AgentPanel({ agents, onDelete, onAdd }) {
+      const [showModal, setShowModal] = useState(false);
+
+      return (
+        <div className="agent-panel">
+          <h3>🐱 猫咪们</h3>
+          <div className="agent-list">
+            {Object.entries(agents).map(([id, agent]) => {
+              const isActive = agent.status !== 'idle';
+              return (
+                <div key={id} className={`agent-item ${isActive ? 'active' : ''}`}>
+                  <span className="avatar">{agent.avatar}</span>
+                  <div className="info">
+                    <div className="name">{agent.name}</div>
+                    <div className={`status ${agent.status || 'idle'}`}>
+                      <span className={`status-icon ${agent.status || 'idle'}`}></span>
+                      {STATUS_ICONS[agent.status] || '💤'} {agent.statusMessage || '等待召唤'}
+                    </div>
+                    {agent.voice && (
+                      <div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>
+                        🎵 {agent.voice.description}
+                      </div>
+                    )}
+                  </div>
+                  {id !== 'opus' && (
+                    <button className="delete-btn" onClick={() => onDelete(id)}>×</button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <button className="add-agent-btn" onClick={() => setShowModal(true)}>
+            + 添加新猫咪
+          </button>
+          {showModal && (
+            <RegisterAgentModal onClose={() => setShowModal(false)}
+              onRegister={(data) => { onAdd(data); setShowModal(false); }} />
+          )}
+        </div>
+      );
+    }
+
+    // 语音设置面板
+    function VoiceSettingsPanel({ autoSpeak, setAutoSpeak }) {
+      return (
+        <div className="voice-settings">
+          <span>🔊 自动朗读回复</span>
+          <div
+            className={`voice-toggle ${autoSpeak ? 'active' : ''}`}
+            onClick={() => setAutoSpeak(!autoSpeak)}
+          />
+        </div>
+      );
+    }
+
+    // 词汇表面板
+    function VocabularyPanel({ vocabulary, onAdd, onDelete }) {
+      const [word, setWord] = useState('');
+      const [pronunciation, setPronunciation] = useState('');
+      const [expanded, setExpanded] = useState(false);
+
+      const handleAdd = () => {
+        if (word.trim() && pronunciation.trim()) {
+          onAdd(word.trim(), pronunciation.trim());
+          setWord('');
+          setPronunciation('');
+        }
+      };
+
+      const vocabCount = Object.keys(vocabulary).length;
+
+      return (
+        <div className="vocab-panel">
+          <h4 onClick={() => setExpanded(!expanded)}>
+            <span>{expanded ? '▼' : '▶'} 📖 发音 ({vocabCount})</span>
+          </h4>
+          {expanded && (
+            <>
+              <div className="vocab-list">
+                {Object.entries(vocabulary).map(([w, p]) => (
+                  <div key={w} className="vocab-item">
+                    <span className="word">{w}</span>
+                    <span className="pronunciation">→ {p}</span>
+                    <button className="delete-btn" onClick={() => onDelete(w)}>×</button>
+                  </div>
+                ))}
+              </div>
+              <div className="vocab-add-form">
+                <input
+                  value={word}
+                  onChange={e => setWord(e.target.value)}
+                  placeholder="词汇"
+                />
+                <input
+                  value={pronunciation}
+                  onChange={e => setPronunciation(e.target.value)}
+                  placeholder="发音"
+                />
+                <button onClick={handleAdd}>+</button>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // 消息气泡
+    function MessageBubble({ message, agentInfo, callerInfo, isStreaming, vocabulary, autoSpeak }) {
+      const isUser = message.role === 'user';
+      const [showLogs, setShowLogs] = useState(false);
+      const [isSpeaking, setIsSpeaking] = useState(false);
+      const utteranceRef = useRef(null);
+
+      // 调试日志
+      console.log('[MessageBubble] isStreaming:', isStreaming, 'processLogs:', message.processLogs?.length);
+
+      // 高亮 @mentions
+      const highlightMentions = (text) => {
+        return text.replace(/@([^\s@]+)/g, '<span class="mention">@$1</span>');
+      };
+
+      // 格式化时间
+      const formatTime = (ts) => {
+        const d = new Date(ts);
+        return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+      };
+
+      // 应用词汇表替换
+      const applyVocabulary = (text) => {
+        let result = text;
+        for (const [word, pronunciation] of Object.entries(vocabulary || {})) {
+          result = result.split(word).join(pronunciation);
+        }
+        return result;
+      };
+
+      // 语音朗读
+      const speak = () => {
+        if (!window.speechSynthesis) {
+          alert('您的浏览器不支持语音合成');
+          return;
+        }
+
+        if (isSpeaking) {
+          window.speechSynthesis.cancel();
+          setIsSpeaking(false);
+          return;
+        }
+
+        const textToSpeak = applyVocabulary(message.content);
+        utteranceRef.current = new SpeechSynthesisUtterance(textToSpeak);
+        utteranceRef.current.lang = 'zh-CN';
+
+        // 应用猫咪的个性化声音
+        if (agentInfo?.voice) {
+          utteranceRef.current.pitch = agentInfo.voice.pitch || 1.0;
+          utteranceRef.current.rate = agentInfo.voice.rate || 1.0;
+        }
+
+        utteranceRef.current.onstart = () => setIsSpeaking(true);
+        utteranceRef.current.onend = () => setIsSpeaking(false);
+        utteranceRef.current.onerror = () => setIsSpeaking(false);
+
+        window.speechSynthesis.speak(utteranceRef.current);
+      };
+
+      // 自动朗读
+      useEffect(() => {
+        if (autoSpeak && !isUser && !isStreaming && message.content && window.speechSynthesis) {
+          const textToSpeak = applyVocabulary(message.content);
+          utteranceRef.current = new SpeechSynthesisUtterance(textToSpeak);
+          utteranceRef.current.lang = 'zh-CN';
+          if (agentInfo?.voice) {
+            utteranceRef.current.pitch = agentInfo.voice.pitch || 1.0;
+            utteranceRef.current.rate = agentInfo.voice.rate || 1.0;
+          }
+          utteranceRef.current.onstart = () => setIsSpeaking(true);
+          utteranceRef.current.onend = () => setIsSpeaking(false);
+          utteranceRef.current.onerror = () => setIsSpeaking(false);
+          window.speechSynthesis.speak(utteranceRef.current);
+        }
+      }, [message.content, isStreaming]);
+
+      const hasLogs = message.processLogs && message.processLogs.length > 0;
+
+      // 流式输出时默认展开日志
+      const shouldShowLogs = isStreaming || showLogs;
+
+      return (
+        <div className={`message-bubble ${isUser ? 'user' : ''}`}>
+          <div className="message-avatar">{isUser ? '👤' : agentInfo?.avatar || '🐱'}</div>
+          <div className="message-content">
+            {!isUser && (
+              <div className="message-sender-wrapper">
+                <div className="message-sender">{agentInfo?.name || message.agentId}</div>
+                {callerInfo && (
+                  <span className="a2a-indicator">
+                    <span className="arrow">←</span>
+                    {callerInfo.avatar} {callerInfo.name} 呼叫
+                  </span>
+                )}
+              </div>
+            )}
+            <div
+              className="message-text"
+              dangerouslySetInnerHTML={{ __html: highlightMentions(message.content) }}
+            />
+            {/* 朗读按钮 */}
+            {!isUser && !isStreaming && window.speechSynthesis && (
+              <button
+                className={`speak-btn ${isSpeaking ? 'speaking' : ''}`}
+                onClick={speak}
+                title={isSpeaking ? '停止朗读' : '朗读消息'}
+              >
+                {isSpeaking ? '🔇' : '🔊'}
+              </button>
+            )}
+            {/* 过程日志面板 */}
+            {!isUser && hasLogs && !isStreaming && (
+              <div className="process-logs-toggle" onClick={() => setShowLogs(!showLogs)}>
+                {showLogs ? '▼' : '▶'} 思考过程 ({message.processLogs.length} 条记录)
+              </div>
+            )}
+            {/* 流式输出时实时显示日志，完成后可折叠 */}
+            {!isUser && shouldShowLogs && hasLogs && (
+              <div className={`process-logs-panel ${isStreaming ? 'live' : ''}`}>
+                {isStreaming && <div style={{ fontSize: 11, color: '#667eea', marginBottom: 6 }}>🔄 实时思考过程</div>}
+                {message.processLogs.map((log, idx) => {
+                  // 获取工具摘要
+                  const getToolSummaryInline = (name, input) => {
+                    if (!input) return name;
+                    switch (name) {
+                      case 'Bash': return `${name}: ${input.command?.slice(0, 50) || ''}`;
+                      case 'Read': return `${name}: ${input.file_path?.split('/').pop() || ''}`;
+                      case 'Write':
+                      case 'Edit': return `${name}: ${input.file_path?.split('/').pop() || ''}`;
+                      case 'Grep': return `${name}: "${input.pattern?.slice(0, 30) || ''}"`;
+                      case 'Glob': return `${name}: ${input.pattern || ''}`;
+                      case 'WebSearch': return `${name}: "${input.query?.slice(0, 40) || ''}"`;
+                      case 'WebFetch': return `${name}: ${input.url?.slice(0, 40) || ''}`;
+                      case 'Task': return `${name}: ${input.description || input.subagent_type || ''}`;
+                      case 'AskUserQuestion': return `${name}: ${input.questions?.[0]?.question?.slice(0, 40) || ''}`;
+                      default: return `${name}: ${JSON.stringify(input).slice(0, 40)}`;
+                    }
+                  };
+
+                  return (
+                    <div key={idx} className="process-log-item">
+                      <span className={`log-type ${log.type}`}>
+                        {log.type === 'thinking' ? '💭 思考' :
+                         log.type === 'tool' ? '🔧 工具' : '📊 状态'}
+                      </span>
+                      <span className="log-content" style={{ fontSize: 11 }}>
+                        {log.type === 'thinking' ? (log.text?.slice(0, 100) + (log.text?.length > 100 ? '...' : '')) :
+                         log.type === 'tool' ? getToolSummaryInline(log.name, log.input) :
+                         log.message}
+                      </span>
+                      <span className="log-time">{formatTime(log.time)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // 输入框
+    function InputBox({ onSend, disabled }) {
+      const [input, setInput] = useState('');
+      const [isRecording, setIsRecording] = useState(false);
+      const recognitionRef = useRef(null);
+
+      // 初始化语音识别
+      useEffect(() => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          recognitionRef.current = new SpeechRecognition();
+          recognitionRef.current.continuous = false;
+          recognitionRef.current.interimResults = false;
+          recognitionRef.current.lang = 'zh-CN';
+
+          recognitionRef.current.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            setInput(prev => prev + transcript);
+          };
+
+          recognitionRef.current.onerror = (event) => {
+            console.error('语音识别错误:', event.error);
+            setIsRecording(false);
+          };
+
+          recognitionRef.current.onend = () => {
+            setIsRecording(false);
+          };
+        }
+      }, []);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (input.trim() && !disabled) { onSend(input.trim()); setInput(''); }
+      };
+
+      const toggleRecording = () => {
+        if (!recognitionRef.current) {
+          alert('您的浏览器不支持语音识别，请使用 Chrome 或 Edge');
+          return;
+        }
+
+        if (isRecording) {
+          recognitionRef.current.stop();
+          setIsRecording(false);
+        } else {
+          recognitionRef.current.start();
+          setIsRecording(true);
+        }
+      };
+
+      const speechSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
+      return (
+        <form className="input-form" onSubmit={handleSubmit}>
+          <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
+            placeholder="输入消息... (@布偶猫 可以指定猫咪)" disabled={disabled} />
+          {speechSupported && (
+            <button
+              type="button"
+              className={`voice-btn ${isRecording ? 'recording' : ''}`}
+              onClick={toggleRecording}
+              disabled={disabled}
+              title={isRecording ? '点击停止' : '按住说话'}
+            >
+              {isRecording ? '⏹️' : '🎤'}
+            </button>
+          )}
+          <button type="submit" disabled={disabled || !input.trim()}>
+            {disabled ? '处理中...' : '发送'}
+          </button>
+        </form>
+      );
+    }
+
+    // 加载指示器
+    function LoadingIndicator({ agentName, agentStatus, callerInfo }) {
+      const icon = STATUS_ICONS[agentStatus] || '🧠';
+      return (
+        <div className="loading-indicator">
+          <span>{icon}</span>
+          <span>
+            {callerInfo && <span style={{ color: '#667eea' }}>{callerInfo.name} → </span>}
+            {agentName} {agentStatus === 'thinking' ? '正在思考...' :
+                         agentStatus === 'tool' ? '使用工具中...' :
+                         agentStatus === 'streaming' ? '正在回复...' :
+                         agentStatus === 'retry' ? '重试中...' : '处理中...'}
+          </span>
+        </div>
+      );
+    }
+
+    // 过程日志面板（实时显示）
+    function ProcessLogPanel({ logs, isLive }) {
+      const [expandedIdx, setExpandedIdx] = useState(null);
+
+      const formatTime = (ts) => {
+        const d = new Date(ts);
+        return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
+      };
+
+      // 详细调试：打印所有日志的类型
+      console.log('[ProcessLogPanel] 所有日志类型:', logs?.map(l => l.type).join(', '));
+      console.log('[ProcessLogPanel] 完整日志:', JSON.stringify(logs, null, 2));
+
+      if (!logs || logs.length === 0) return null;
+
+      // 获取工具调用的摘要显示
+      const getToolSummary = (name, input) => {
+        console.log('[getToolSummary] name:', name, 'input:', input);
+        if (!input) return name;
+
+        // 根据工具类型提取关键信息
+        switch (name) {
+          case 'Bash':
+            return `${name}: ${input.command?.slice(0, 50) || ''}${input.command?.length > 50 ? '...' : ''}`;
+          case 'Read':
+            return `${name}: ${input.file_path?.split('/').pop() || ''}`;
+          case 'Write':
+          case 'Edit':
+            return `${name}: ${input.file_path?.split('/').pop() || ''}`;
+          case 'Grep':
+            return `${name}: "${input.pattern?.slice(0, 30) || ''}"`;
+          case 'Glob':
+            return `${name}: ${input.pattern || ''}`;
+          case 'WebSearch':
+            return `${name}: "${input.query?.slice(0, 40) || ''}"`;
+          case 'WebFetch':
+            return `${name}: ${input.url?.slice(0, 40) || ''}`;
+          case 'Task':
+            return `${name}: ${input.description || input.subagent_type || ''}`;
+          default:
+            return name;
+        }
+      };
+
+      // 获取工具调用的详细内容
+      const getToolDetail = (name, input) => {
+        if (!input) return null;
+        switch (name) {
+          case 'Bash':
+            return `$ ${input.command}`;
+          case 'Read':
+          case 'Write':
+          case 'Edit':
+            return `文件: ${input.file_path}`;
+          default:
+            return JSON.stringify(input, null, 2);
+        }
+      };
+
+      return (
+        <div className={`process-logs-panel ${isLive ? 'live' : ''}`}>
+          {isLive && <div style={{ fontSize: 11, color: '#667eea', marginBottom: 6 }}>🔄 实时思考过程</div>}
+          {logs.map((log, idx) => {
+            const isExpanded = expandedIdx === idx;
+
+            // 判断是否有详细内容可展开
+            const hasDetail = (log.type === 'thinking' && log.text?.length > 80) ||
+                             (log.type === 'tool' && log.input);
+
+            // 获取摘要内容
+            const getSummary = () => {
+              if (log.type === 'thinking') {
+                // 思考内容直接显示前80字符
+                return log.text?.slice(0, 80) + (log.text?.length > 80 ? '...' : '');
+              }
+              if (log.type === 'tool') {
+                // 显示工具名和关键参数
+                return getToolSummary(log.name, log.input);
+              }
+              return log.message;
+            };
+
+            // 获取详细内容
+            const getDetail = () => {
+              if (log.type === 'thinking') {
+                return log.text;
+              }
+              if (log.type === 'tool') {
+                return getToolDetail(log.name, log.input);
+              }
+              return null;
+            };
+
+            return (
+              <div key={idx} className="process-log-item">
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 4 }}>
+                  <span className={`log-type ${log.type}`}>
+                    {log.type === 'thinking' ? '💭' :
+                     log.type === 'tool' ? '🔧' : '📊'}
+                  </span>
+                  <span className="log-content" style={{ flex: 1, fontSize: 11 }}>
+                    {getSummary()}
+                  </span>
+                  {hasDetail && (
+                    <span
+                      style={{ cursor: 'pointer', color: '#667eea', fontSize: 10, flexShrink: 0 }}
+                      onClick={() => setExpandedIdx(isExpanded ? null : idx)}
+                    >
+                      {isExpanded ? '收起' : '详情'}
+                    </span>
+                  )}
+                  <span className="log-time">{formatTime(log.time)}</span>
+                </div>
+                {isExpanded && hasDetail && (
+                  <pre style={{
+                    margin: '8px 0 0 20px',
+                    padding: '8px',
+                    background: '#fff',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    maxHeight: '200px',
+                    overflow: 'auto',
+                    border: '1px solid #eee'
+                  }}>
+                    {getDetail()}
+                  </pre>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // 主应用
+    function App() {
+      const [threads, setThreads] = useState([]);
+      const [threadId, setThreadId] = useState(null);
+      const [messages, setMessages] = useState([]);
+      const [agents, setAgents] = useState({});
+      const [loading, setLoading] = useState(false);
+      const [streamingContent, setStreamingContent] = useState('');
+      const [currentAgent, setCurrentAgent] = useState(null);
+      const [currentCaller, setCurrentCaller] = useState(null); // A2A 调用者
+      const [currentAgentStatus, setCurrentAgentStatus] = useState('thinking');
+      const [currentProcessLogs, setCurrentProcessLogs] = useState([]); // 当前消息的过程日志
+      const [tokenUsage, setTokenUsage] = useState({ input: 0, output: 0, total: 0, cost: 0, budget: 100 });
+      const [showCreateModal, setShowCreateModal] = useState(false);
+      const [renameThread, setRenameThread] = useState(null); // 正在重命名的线程
+      const [a2aMap, setA2aMap] = useState({}); // agentId -> callerId 映射
+      const [autoSpeak, setAutoSpeak] = useState(false); // 自动朗读开关
+      const [vocabulary, setVocabulary] = useState({}); // 自定义词汇表
+      const socketRef = useRef(null);
+      const messagesEndRef = useRef(null);
+      const threadIdRef = useRef(null);
+      const processLogsRef = useRef([]); // 用于在事件处理器中引用
+
+      useEffect(() => { threadIdRef.current = threadId; }, [threadId]);
+
+      const loadThreads = async () => {
+        try {
+          const res = await fetch('/api/threads');
+          const data = await res.json();
+          setThreads(data);
+          if (!threadIdRef.current && data.length > 0) setThreadId(data[0].id);
+        } catch (err) { console.error('加载对话列表失败:', err); }
+      };
+
+      const loadAgents = async () => {
+        try {
+          const res = await fetch('/api/agents/status');
+          setAgents(await res.json());
+        } catch (err) { console.error('加载猫咪状态失败:', err); }
+      };
+
+      const loadVocabulary = async () => {
+        try {
+          const res = await fetch('/api/vocabulary');
+          setVocabulary(await res.json());
+        } catch (err) { console.error('加载词汇表失败:', err); }
+      };
+
+      useEffect(() => { loadThreads(); loadAgents(); loadVocabulary(); }, []);
+
+      useEffect(() => {
+        socketRef.current = io();
+
+        socketRef.current.on('connect', () => {
+          console.log('WebSocket 已连接');
+          if (threadIdRef.current) socketRef.current.emit('join', threadIdRef.current);
+        });
+
+        socketRef.current.on('message', (msg) => {
+          if (msg.threadId === threadIdRef.current) setMessages(prev => [...prev, msg]);
+          loadThreads();
+        });
+
+        socketRef.current.on('event', (event) => {
+          console.log('事件:', event);
+          switch (event.type) {
+            case 'start':
+              setCurrentAgent(event.agent);
+              setCurrentCaller(event.caller || null);
+              setCurrentAgentStatus('thinking');
+              setStreamingContent('');
+              setCurrentProcessLogs([]); // 重置过程日志
+              processLogsRef.current = [];
+              setLoading(true);
+              // 记录 A2A 映射
+              if (event.isA2A && event.caller) {
+                setA2aMap(prev => ({ ...prev, [event.agent.id]: event.caller.id }));
+              }
+              break;
+            case 'status':
+              setCurrentAgentStatus(event.status);
+              break;
+            case 'stream':
+              setStreamingContent(prev => prev + event.text);
+              setCurrentAgentStatus('streaming');
+              break;
+            case 'retry':
+              setCurrentAgentStatus('retry');
+              break;
+            case 'complete':
+              setMessages(prev => [...prev, {
+                id: `msg-${Date.now()}`, threadId: threadIdRef.current,
+                agentId: event.agentId, role: 'assistant',
+                content: event.response, timestamp: Date.now(),
+                isA2A: event.isA2A,
+                processLogs: event.processLogs || processLogsRef.current  // 使用服务器的或本地收集的日志
+              }]);
+              setStreamingContent('');
+              setCurrentProcessLogs([]); // 清空当前过程日志
+              processLogsRef.current = [];
+              setCurrentAgent(null);
+              setCurrentCaller(null);
+              break;
+            case 'done':
+              console.log('[前端] 调用链完成:', event.callChain, 'isFinal:', event.isFinal);
+              if (event.isFinal) {
+                setLoading(false);
+                loadThreads();
+                // 可选：显示调用链摘要
+                if (event.callChain && event.callChain.length > 1) {
+                  console.log('[前端] A2A 调用链:', event.callChain.map(c => c.agentName).join(' -> '));
+                }
+              }
+              break;
+            case 'depth-limit':
+              console.warn('[前端] 达到深度限制:', event.maxDepth);
+              setMessages(prev => [...prev, {
+                id: `depth-${Date.now()}`, threadId: threadIdRef.current,
+                agentId: 'system', role: 'assistant',
+                content: `⚠️ A2A 调用达到最大深度 ${event.maxDepth}，已停止进一步调用`,
+                timestamp: Date.now()
+              }]);
+              break;
+            case 'error':
+              console.error('错误:', event.message);
+              setLoading(false);
+              setCurrentAgent(null);
+              setCurrentCaller(null);
+              setCurrentProcessLogs([]);
+              processLogsRef.current = [];
+              setMessages(prev => [...prev, {
+                id: `error-${Date.now()}`, threadId: threadIdRef.current,
+                agentId: 'system', role: 'assistant',
+                content: `❌ 错误: ${event.message}`, timestamp: Date.now()
+              }]);
+              break;
+          }
+        });
+
+        // 监听私有状态事件（thinking, tool, status）- 实时显示思考过程
+        socketRef.current.on('status-event', (event) => {
+          console.log('[前端] 收到状态事件:', event.type, JSON.stringify(event).slice(0, 200));
+          const logEntry = {
+            type: event.type,
+            time: Date.now(),
+            ...(event.type === 'thinking' && { text: event.text }),
+            ...(event.type === 'tool' && { name: event.name, input: event.input }),
+            ...(event.type === 'status' && { status: event.status, message: event.message })
+          };
+          // 调试：显示每个日志条目
+          console.log('[前端] 日志条目:', logEntry.type, logEntry);
+          processLogsRef.current = [...processLogsRef.current, logEntry];
+          setCurrentProcessLogs([...processLogsRef.current]);
+        });
+
+        socketRef.current.on('agents-status', (status) => setAgents(status));
+
+        socketRef.current.on('agent-status-update', ({ agentId, status, message }) => {
+          setAgents(prev => ({
+            ...prev,
+            [agentId]: { ...prev[agentId], status, statusMessage: message }
+          }));
+        });
+
+        socketRef.current.on('token-usage', (usage) => setTokenUsage(usage));
+
+        return () => { socketRef.current?.disconnect(); };
+      }, []);
+
+      useEffect(() => {
+        if (threadId && socketRef.current) {
+          console.log('[前端] 加入房间:', threadId);
+          socketRef.current.emit('join', threadId);
+          fetch(`/api/threads/${threadId}/messages`)
+            .then(res => res.json())
+            .then(data => setMessages(data))
+            .catch(err => console.error('加载消息失败:', err));
+        }
+      }, [threadId]);
+
+      useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [messages, streamingContent]);
+
+      const handleSend = async (text) => {
+        setLoading(true);
+        try {
+          await fetch(`/api/threads/${threadId}/invoke`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+          });
+        } catch (err) {
+          console.error('发送失败:', err);
+          setLoading(false);
+        }
+      };
+
+      const handleStop = async () => {
+        await fetch(`/api/threads/${threadId}/stop`, { method: 'POST' });
+        setLoading(false);
+        setStreamingContent('');
+        setCurrentAgent(null);
+      };
+
+      const handleCreateThread = async (title) => {
+        const res = await fetch('/api/threads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title })
+        });
+        const data = await res.json();
+        setThreadId(data.threadId);
+        setMessages([]);
+        setShowCreateModal(false);
+        loadThreads();
+      };
+
+      const handleDeleteThread = async (id) => {
+        if (!confirm('确定要删除这个对话吗？')) return;
+        await fetch(`/api/threads/${id}`, { method: 'DELETE' });
+        loadThreads();
+        if (id === threadId) { setThreadId(null); setMessages([]); }
+      };
+
+      const handleArchiveThread = async (id, archived) => {
+        await fetch(`/api/threads/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ archived })
+        });
+        loadThreads();
+        if (archived && id === threadId) { setThreadId(null); setMessages([]); }
+      };
+
+      const handleRenameThread = async (id, title) => {
+        await fetch(`/api/threads/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title })
+        });
+        loadThreads();
+      };
+
+      const handleRegisterAgent = async (data) => {
+        try {
+          await fetch('/api/agents', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          loadAgents();
+        } catch (err) { console.error('注册猫咪失败:', err); }
+      };
+
+      const handleDeleteAgent = async (id) => {
+        if (!confirm('确定要删除这只猫咪吗？')) return;
+        try {
+          await fetch(`/api/agents/${id}`, { method: 'DELETE' });
+          loadAgents();
+        } catch (err) { console.error('删除猫咪失败:', err); }
+      };
+
+      const handleAddVocab = async (word, pronunciation) => {
+        try {
+          await fetch('/api/vocabulary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ word, pronunciation })
+          });
+          loadVocabulary();
+        } catch (err) { console.error('添加词汇失败:', err); }
+      };
+
+      const handleDeleteVocab = async (word) => {
+        try {
+          await fetch(`/api/vocabulary/${encodeURIComponent(word)}`, { method: 'DELETE' });
+          loadVocabulary();
+        } catch (err) { console.error('删除词汇失败:', err); }
+      };
+
+      const currentThread = threads.find(t => t.id === threadId);
+
+      return (
+        <>
+          <div className="sidebar">
+            <div className="sidebar-header">
+              <h1>Cat Café Mini</h1>
+              <p>与可爱的猫咪们聊天吧</p>
+            </div>
+
+            <TokenPanel usage={tokenUsage} />
+
+            <button className="new-thread-btn" onClick={() => setShowCreateModal(true)}>
+              + 新建对话
+            </button>
+
+            <ThreadList threads={threads} activeThreadId={threadId}
+              onSelect={setThreadId} onDelete={handleDeleteThread}
+              onArchive={handleArchiveThread} onRename={setRenameThread} />
+
+            <AgentPanel agents={agents} onDelete={handleDeleteAgent} onAdd={handleRegisterAgent} />
+
+            <VoiceSettingsPanel autoSpeak={autoSpeak} setAutoSpeak={setAutoSpeak} />
+
+            <VocabularyPanel
+              vocabulary={vocabulary}
+              onAdd={handleAddVocab}
+              onDelete={handleDeleteVocab}
+            />
+          </div>
+
+          <div className="chat-area">
+            {threadId ? (
+              <>
+                <div className="chat-header">
+                  <h2>{currentThread?.title || '新对话'}</h2>
+                </div>
+
+                <div className="messages-container">
+                  {messages.map(msg => (
+                    <MessageBubble
+                      key={msg.id}
+                      message={msg}
+                      agentInfo={agents[msg.agentId]}
+                      callerInfo={msg.isA2A ? agents[a2aMap[msg.agentId]] : null}
+                      vocabulary={vocabulary}
+                      autoSpeak={autoSpeak}
+                    />
+                  ))}
+                  {streamingContent && (
+                    <MessageBubble
+                      message={{
+                        role: 'assistant',
+                        agentId: currentAgent?.id || 'opus',
+                        content: streamingContent,
+                        processLogs: currentProcessLogs  // 传递实时日志
+                      }}
+                      agentInfo={agents[currentAgent?.id] || agents['opus']}
+                      callerInfo={currentCaller}
+                      isStreaming={true}
+                      vocabulary={vocabulary}
+                      autoSpeak={false}
+                    />
+                  )}
+                  {/* 加载中但还没开始输出时，显示实时过程日志 */}
+                  {loading && !streamingContent && currentAgent && (
+                    <div className="message-bubble">
+                      <div className="message-avatar">{currentAgent?.avatar || '🐱'}</div>
+                      <div className="message-content">
+                        <div className="message-sender-wrapper">
+                          <div className="message-sender">{currentAgent?.name}</div>
+                          {currentCaller && (
+                            <span className="a2a-indicator">
+                              <span className="arrow">←</span>
+                              {currentCaller.avatar} {currentCaller.name} 呼叫
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ padding: '8px 0', color: '#666', fontSize: 13 }}>
+                          {currentAgentStatus === 'thinking' ? '💭 正在思考...' :
+                           currentAgentStatus === 'tool' ? '🔧 使用工具中...' :
+                           currentAgentStatus === 'retry' ? '⏳ 重试中...' : '⏳ 处理中...'}
+                          {currentProcessLogs.length > 0 && (
+                            <span style={{ marginLeft: 8, color: '#667eea' }}>
+                              ({currentProcessLogs.length} 条思考记录)
+                            </span>
+                          )}
+                        </div>
+                        <ProcessLogPanel logs={currentProcessLogs} isLive={true} />
+                      </div>
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                <div className="input-area">
+                  {loading && <button className="stop-btn" onClick={handleStop}>停止</button>}
+                  <InputBox onSend={handleSend} disabled={loading} />
+                </div>
+              </>
+            ) : (
+              <div style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'white', fontSize: 18
+              }}>选择或创建一个对话开始聊天</div>
+            )}
+          </div>
+
+          {showCreateModal && (
+            <CreateThreadModal onClose={() => setShowCreateModal(false)} onCreate={handleCreateThread} />
+          )}
+
+          {renameThread && (
+            <RenameThreadModal
+              thread={renameThread}
+              onClose={() => setRenameThread(null)}
+              onRename={handleRenameThread}
+            />
+          )}
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
