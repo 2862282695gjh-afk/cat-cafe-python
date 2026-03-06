@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+"""
+DeepSeek CLI v2 入口 - 四层架构版本
+用法: python deepseek-v2 -p "你的问题" --verbose
+"""
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from deepseek_cli.deepseek_cli_v2 import main
+import asyncio
+
+if __name__ == "__main__":
+    asyncio.run(main())

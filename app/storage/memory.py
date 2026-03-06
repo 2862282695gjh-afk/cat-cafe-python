@@ -260,3 +260,195 @@ class MemoryStorage:
                 lines.append("")
 
         return '\n'.join(lines)
+
+    # ===== Agent 持久化 =====
+    def save_agent(self, agent_id: str, agent_config: Dict):
+        """保存 Agent 配置"""
+        self.agent_configs = getattr(self, 'agent_configs', {})
+        self.agent_configs[agent_id] = {
+            **agent_config,
+            'updatedAt': int(time.time() * 1000)
+        }
+
+    def get_agent(self, agent_id: str) -> Optional[Dict]:
+        """获取 Agent 配置"""
+        self.agent_configs = getattr(self, 'agent_configs', {})
+        return self.agent_configs.get(agent_id)
+
+    def get_all_agents(self) -> List[Dict]:
+        """获取所有 Agent 配置"""
+        self.agent_configs = getattr(self, 'agent_configs', {})
+        return list(self.agent_configs.values())
+
+    def delete_agent(self, agent_id: str):
+        """删除 Agent 配置"""
+        self.agent_configs = getattr(self, 'agent_configs', {})
+        self.agent_configs.pop(agent_id, None)
+
+    # ===== 对话角色配置 =====
+    def save_thread_roles(self, thread_id: str, roles: Dict):
+        """保存对话的角色配置 { agentId: roleDescription }"""
+        self.thread_roles = getattr(self, 'thread_roles', {})
+        self.thread_roles[thread_id] = {
+            **roles,
+            'updatedAt': int(time.time() * 1000)
+        }
+
+    def get_thread_roles(self, thread_id: str) -> Optional[Dict]:
+        """获取对话的角色配置"""
+        self.thread_roles = getattr(self, 'thread_roles', {})
+        roles = self.thread_roles.get(thread_id, {})
+        # 过滤元数据
+        return {k: v for k, v in roles.items() if k != 'updatedAt'} if roles else {}
+
+    # ===== 房间级别的猫咪记忆 =====
+    def save_thread_agent_memory(self, thread_id: str, agent_id: str, memory: Dict):
+        """保存房间内特定猫咪的记忆"""
+        self.thread_agent_memories = getattr(self, 'thread_agent_memories', {})
+        key = f"{thread_id}:{agent_id}"
+        self.thread_agent_memories[key] = {
+            **memory,
+            'updatedAt': int(time.time() * 1000)
+        }
+
+    def get_thread_agent_memory(self, thread_id: str, agent_id: str) -> Optional[Dict]:
+        """获取房间内特定猫咪的记忆"""
+        self.thread_agent_memories = getattr(self, 'thread_agent_memories', {})
+        key = f"{thread_id}:{agent_id}"
+        memory = self.thread_agent_memories.get(key, {})
+        # 过滤元数据
+        return {k: v for k, v in memory.items() if k not in ('updatedAt', 'createdAt')} if memory else {}
+
+    def add_thread_agent_memory_entry(self, thread_id: str, agent_id: str, key: str, value: str):
+        """添加一条房间内猫咪的记忆"""
+        self.thread_agent_memories = getattr(self, 'thread_agent_memories', {})
+        mem_key = f"{thread_id}:{agent_id}"
+        existing = self.thread_agent_memories.get(mem_key, {})
+        existing[key] = value
+        existing['updatedAt'] = int(time.time() * 1000)
+        if not existing.get('createdAt'):
+            existing['createdAt'] = existing['updatedAt']
+        self.thread_agent_memories[mem_key] = existing
+
+    def remove_thread_agent_memory_entry(self, thread_id: str, agent_id: str, key: str):
+        """删除一条房间内猫咪的记忆"""
+        self.thread_agent_memories = getattr(self, 'thread_agent_memories', {})
+        mem_key = f"{thread_id}:{agent_id}"
+        existing = self.thread_agent_memories.get(mem_key, {})
+        if key in existing:
+            del existing[key]
+            existing['updatedAt'] = int(time.time() * 1000)
+            self.thread_agent_memories[mem_key] = existing
+
+    # ===== MCP 服务器管理 =====
+    def save_mcp_server(self, server_id: str, config: Dict):
+        """保存 MCP 服务器配置"""
+        self.mcp_servers = getattr(self, 'mcp_servers', {})
+        existing = self.mcp_servers.get(server_id, {})
+        self.mcp_servers[server_id] = {
+            **existing,
+            **config,
+            'updatedAt': int(time.time() * 1000)
+        }
+        if not existing.get('createdAt'):
+            self.mcp_servers[server_id]['createdAt'] = self.mcp_servers[server_id]['updatedAt']
+
+    def get_mcp_server(self, server_id: str) -> Optional[Dict]:
+        """获取 MCP 服务器配置"""
+        self.mcp_servers = getattr(self, 'mcp_servers', {})
+        return self.mcp_servers.get(server_id)
+
+    def get_all_mcp_servers(self) -> List[Dict]:
+        """获取所有 MCP 服务器配置"""
+        self.mcp_servers = getattr(self, 'mcp_servers', {})
+        return list(self.mcp_servers.values())
+
+    def delete_mcp_server(self, server_id: str):
+        """删除 MCP 服务器配置"""
+        self.mcp_servers = getattr(self, 'mcp_servers', {})
+        self.mcp_servers.pop(server_id, None)
+
+    # ===== Skill 管理 =====
+    def save_skill(self, skill_id: str, config: Dict):
+        """保存 Skill 配置"""
+        self.skills = getattr(self, 'skills', {})
+        existing = self.skills.get(skill_id, {})
+        self.skills[skill_id] = {
+            **existing,
+            **config,
+            'updatedAt': int(time.time() * 1000)
+        }
+        if not existing.get('createdAt'):
+            self.skills[skill_id]['createdAt'] = self.skills[skill_id]['updatedAt']
+
+    def get_skill(self, skill_id: str) -> Optional[Dict]:
+        """获取 Skill 配置"""
+        self.skills = getattr(self, 'skills', {})
+        return self.skills.get(skill_id)
+
+    def get_all_skills(self) -> List[Dict]:
+        """获取所有 Skill 配置"""
+        self.skills = getattr(self, 'skills', {})
+        return list(self.skills.values())
+
+    def delete_skill(self, skill_id: str):
+        """删除 Skill 配置"""
+        self.skills = getattr(self, 'skills', {})
+        self.skills.pop(skill_id, None)
+
+    # ===== Agent 工具授权 =====
+    def save_agent_tools(self, agent_id: str, tools: Dict):
+        """保存 Agent 的工具授权配置 { mcpTools: [...], skills: [...] }"""
+        self.agent_tools = getattr(self, 'agent_tools', {})
+        existing = self.agent_tools.get(agent_id, {})
+        self.agent_tools[agent_id] = {
+            **existing,
+            **tools,
+            'updatedAt': int(time.time() * 1000)
+        }
+        if not existing.get('createdAt'):
+            self.agent_tools[agent_id]['createdAt'] = self.agent_tools[agent_id]['updatedAt']
+
+    def get_agent_tools(self, agent_id: str) -> Optional[Dict]:
+        """获取 Agent 的工具授权配置"""
+        self.agent_tools = getattr(self, 'agent_tools', {})
+        return self.agent_tools.get(agent_id)
+
+    def delete_agent_tools(self, agent_id: str):
+        """删除 Agent 的工具授权配置"""
+        self.agent_tools = getattr(self, 'agent_tools', {})
+        self.agent_tools.pop(agent_id, None)
+
+    # ===== Skill 授权（按 Skill 维度管理）=====
+    def save_skill_assignment(self, skill_id: str, agent_ids: List[str]):
+        """保存 Skill 授权给哪些 Agent"""
+        self.skill_assignments = getattr(self, 'skill_assignments', {})
+        self.skill_assignments[skill_id] = {
+            'agentIds': agent_ids,
+            'updatedAt': int(time.time() * 1000)
+        }
+
+    def get_skill_assignment(self, skill_id: str) -> List[str]:
+        """获取 Skill 授权给了哪些 Agent"""
+        self.skill_assignments = getattr(self, 'skill_assignments', {})
+        return self.skill_assignments.get(skill_id, {}).get('agentIds', [])
+
+    def get_all_skill_assignments(self) -> Dict[str, List[str]]:
+        """获取所有 Skill 的授权配置"""
+        self.skill_assignments = getattr(self, 'skill_assignments', {})
+        return {skill_id: data.get('agentIds', [])
+                for skill_id, data in self.skill_assignments.items()}
+
+    def get_agent_skill_ids(self, agent_id: str) -> List[str]:
+        """获取 Agent 被授权的所有 Skill ID"""
+        self.skill_assignments = getattr(self, 'skill_assignments', {})
+        return [skill_id for skill_id, data in self.skill_assignments.items()
+                if agent_id in data.get('agentIds', [])]
+
+    def remove_agent_from_all_skills(self, agent_id: str):
+        """从所有 Skill 中移除某个 Agent（删除 Agent 时调用）"""
+        self.skill_assignments = getattr(self, 'skill_assignments', {})
+        for skill_id, data in self.skill_assignments.items():
+            if agent_id in data.get('agentIds', []):
+                data['agentIds'] = [aid for aid in data['agentIds'] if aid != agent_id]
+                data['updatedAt'] = int(time.time() * 1000)

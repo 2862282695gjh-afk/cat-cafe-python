@@ -26,6 +26,46 @@
       display: flex;
       flex-direction: column;
       border-right: 1px solid rgba(0, 0, 0, 0.1);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 右侧工具栏 */
+    .right-sidebar {
+      width: 300px;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid rgba(0, 0, 0, 0.1);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .right-sidebar-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #eee;
+      background: #f8f9fa;
+    }
+
+    .right-sidebar-header h3 {
+      font-size: 14px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .right-sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px;
+    }
+
+    .sidebar-content, .right-sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
     .sidebar-header {
@@ -225,6 +265,16 @@
       border-left: 3px solid #667eea;
     }
 
+    .agent-item.selected {
+      background: #e8f5e9;
+      border-left: 3px solid #4caf50;
+    }
+
+    .agent-item.selected.active {
+      background: #fff3e0;
+      border-left: 3px solid #ff9800;
+    }
+
     .agent-item .avatar {
       margin-right: 10px;
       font-size: 24px;
@@ -273,15 +323,16 @@
     }
 
     .agent-item .delete-btn {
-      opacity: 0;
       background: none;
       border: none;
       cursor: pointer;
       font-size: 14px;
       padding: 0 4px;
+      color: #999;
+      opacity: 0.5;
     }
 
-    .agent-item:hover .delete-btn { opacity: 0.6; }
+    .agent-item:hover .delete-btn { opacity: 1; color: #e74c3c; }
 
     .add-agent-btn {
       width: 100%;
@@ -311,18 +362,87 @@
       padding: 16px 24px;
       margin-bottom: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .chat-header h2 { font-size: 18px; color: #333; }
+    .chat-header h2 { font-size: 18px; color: #333; margin: 0; }
+
+    .roles-config-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .roles-config-btn:hover {
+      background: #f0f0f0;
+    }
 
     .messages-container {
       flex: 1;
-      overflow: auto;
+      overflow-y: auto;
       background: white;
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* Steering 模式下多猫咪思考面板 - 简洁样式 */
+    .message-bubble.steering-agent {
+      margin: 12px 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .steering-agent .message-sender {
+      font-weight: 600;
+    }
+
+    .steering-agent .message-content {
+      border-left: 4px solid #667eea;
+      background: #f8f9ff;
+      border-radius: 0 12px 12px 0;
+    }
+
+    /* 不同猫咪用不同颜色左边框 */
+    .message-bubble.steering-agent[data-agent="opus"] .message-content {
+      border-left-color: #667eea;
+      background: #f8f9ff;
+    }
+    .message-bubble.steering-agent[data-agent="opus"] .message-sender {
+      color: #667eea;
+    }
+
+    .message-bubble.steering-agent[data-agent="cat-1772106648622-b890a518"] .message-content {
+      border-left-color: #f59e0b;
+      background: #fff8e1;
+    }
+    .message-bubble.steering-agent[data-agent="cat-1772106648622-b890a518"] .message-sender {
+      color: #f59e0b;
+    }
+
+    .message-bubble.steering-agent[data-agent="cat-1772181082591-000c0074"] .message-content {
+      border-left-color: #27ae60;
+      background: #e8f5e9;
+    }
+    .message-bubble.steering-agent[data-agent="cat-1772181082591-000c0074"] .message-sender {
+      color: #27ae60;
+    }
+
+    .message-bubble.steering-agent[data-agent="cat-1772208109895-e2121e1b"] .message-content {
+      border-left-color: #e91e63;
+      background: #fce4ec;
+    }
+    .message-bubble.steering-agent[data-agent="cat-1772208109895-e2121e1b"] .message-sender {
+      color: #e91e63;
     }
 
     .message-bubble {
@@ -919,6 +1039,249 @@
       color: #c00;
       border-color: #fcc;
     }
+
+    /* MCP 面板样式 */
+    .mcp-panel, .skill-panel {
+      margin-top: 8px;
+      padding: 8px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    .mcp-panel h4, .skill-panel h4 {
+      margin-bottom: 6px;
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: 2px 0;
+    }
+
+    .mcp-panel h4:hover, .skill-panel h4:hover { color: #667eea; }
+
+    .mcp-server-list, .skill-list {
+      max-height: 150px;
+      overflow-y: auto;
+      margin-bottom: 6px;
+    }
+
+    .mcp-server-item, .skill-item {
+      display: flex;
+      flex-direction: column;
+      padding: 6px 8px;
+      background: white;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      font-size: 11px;
+      border: 1px solid #eee;
+    }
+
+    .mcp-server-item .header, .skill-item .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .mcp-server-item .name, .skill-item .name {
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mcp-server-item .status-badge {
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: 500;
+    }
+
+    .status-badge.running { background: #d4edda; color: #155724; }
+    .status-badge.stopped { background: #f8d7da; color: #721c24; }
+    .status-badge.error { background: #fff3cd; color: #856404; }
+    .status-badge.starting { background: #cce5ff; color: #004085; }
+
+    .mcp-server-item .actions, .skill-item .actions {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .mcp-server-item .actions button, .skill-item .actions button {
+      padding: 2px 8px;
+      font-size: 10px;
+      border-radius: 3px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+    }
+
+    .mcp-server-item .actions button:hover, .skill-item .actions button:hover {
+      background: #f0f0f0;
+    }
+
+    .mcp-server-item .actions button.primary {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .mcp-server-item .actions button.danger {
+      color: #dc3545;
+    }
+
+    .mcp-server-item .actions button.danger:hover {
+      background: #fee;
+    }
+
+    .mcp-add-form, .skill-add-form {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #eee;
+    }
+
+    .mcp-add-form input, .skill-add-form input,
+    .mcp-add-form select, .skill-add-form select,
+    .mcp-add-form textarea, .skill-add-form textarea {
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .mcp-add-form .form-row, .skill-add-form .form-row {
+      display: flex;
+      gap: 4px;
+    }
+
+    .mcp-add-form .form-row > *, .skill-add-form .form-row > * {
+      flex: 1;
+    }
+
+    /* 工具授权面板 */
+    .tool-auth-panel {
+      margin-top: 8px;
+      padding: 8px;
+      background: #f0f7ff;
+      border-radius: 8px;
+      font-size: 11px;
+      border-top: 1px solid #cce5ff;
+    }
+
+    .tool-auth-panel h5 {
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    .tool-auth-section {
+      margin-bottom: 8px;
+    }
+
+    .tool-auth-section label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 0;
+      cursor: pointer;
+    }
+
+    .tool-auth-section label:hover {
+      color: #667eea;
+    }
+
+    .tool-auth-section input[type="checkbox"] {
+      margin: 0;
+    }
+
+    /* 技能模板选择 */
+    .template-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin: 8px 0;
+    }
+
+    .template-item {
+      padding: 6px 8px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 10px;
+    }
+
+    .template-item:hover {
+      border-color: #667eea;
+      background: #f0f7ff;
+    }
+
+    .template-item.selected {
+      border-color: #667eea;
+      background: #e0f0ff;
+    }
+
+    .template-item .name {
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .template-item .desc {
+      color: #666;
+      font-size: 9px;
+    }
+
+    /* 右侧栏标签页 */
+    .right-sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid #eee;
+      background: #f8f9fa;
+    }
+
+    .right-sidebar-tab {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 11px;
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #666;
+      transition: all 0.2s;
+    }
+
+    .right-sidebar-tab:hover {
+      background: #e9ecef;
+    }
+
+    .right-sidebar-tab.active {
+      background: white;
+      color: #667eea;
+      border-bottom: 2px solid #667eea;
+      font-weight: 500;
+    }
+
+    .right-sidebar .mcp-panel,
+    .right-sidebar .skill-panel,
+    .right-sidebar .tool-auth-panel {
+      border-top: none;
+      margin-top: 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    /* 技能详情视图 */
+    .skill-detail {
+      padding: 8px;
+      background: white;
+      border-radius: 4px;
+      font-size: 11px;
+    }
   </style>
 </head>
 <body>
@@ -996,6 +1359,7 @@
       const [name, setName] = useState('');
       const [avatar, setAvatar] = useState('🐱');
       const [description, setDescription] = useState('');
+      const [cliType, setCliType] = useState('claude'); // 'claude' 或 'deepseek'
       const [systemPrompt, setSystemPrompt] = useState('你是一只可爱的猫咪，喜欢帮助人类，用温柔友善的方式回答问题。');
 
       const avatars = ['🐱', '🐈', '😺', '😸', '😻', '🙀', '😿', '😾', '🐯', '🦁'];
@@ -1016,6 +1380,28 @@
             ))}
           </div>
 
+          <label>CLI 类型</label>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <button onClick={() => setCliType('claude')} style={{
+              flex: 1, padding: 10,
+              border: cliType === 'claude' ? '2px solid #667eea' : '1px solid #ddd',
+              borderRadius: 8, background: cliType === 'claude' ? '#f0f4ff' : 'white',
+              cursor: 'pointer', textAlign: 'left'
+            }}>
+              <div style={{ fontWeight: 'bold', marginBottom: 4 }}>🤖 Claude Code CLI</div>
+              <div style={{ fontSize: 11, color: '#666' }}>使用 Anthropic Claude API</div>
+            </button>
+            <button onClick={() => setCliType('deepseek')} style={{
+              flex: 1, padding: 10,
+              border: cliType === 'deepseek' ? '2px solid #667eea' : '1px solid #ddd',
+              borderRadius: 8, background: cliType === 'deepseek' ? '#f0f4ff' : 'white',
+              cursor: 'pointer', textAlign: 'left'
+            }}>
+              <div style={{ fontWeight: 'bold', marginBottom: 4 }}>🧠 DeepSeek CLI</div>
+              <div style={{ fontSize: 11, color: '#666' }}>使用 DeepSeek API</div>
+            </button>
+          </div>
+
           <label>简介</label>
           <input value={description} onChange={e => setDescription(e.target.value)} placeholder="例如：一只活泼的小猫" />
 
@@ -1027,31 +1413,164 @@
             <button className="cancel-btn" onClick={onClose}>取消</button>
             <button className="confirm-btn" onClick={() => {
               if (!name.trim()) { alert('请填写猫咪名称'); return; }
-              onRegister({ name, avatar, description, systemPrompt });
+              onRegister({ name, avatar, description, systemPrompt, type: cliType });
             }}>注册</button>
           </div>
         </Modal>
       );
     }
 
-    // Token 使用量面板
-    function TokenPanel({ usage }) {
-      const percentage = usage.budget > 0 ? (usage.cost / usage.budget) * 100 : 0;
-      const barClass = percentage > 80 ? 'danger' : percentage > 50 ? 'warning' : '';
+    // 角色配置弹窗
+    function RolesConfigModal({ threadId, roles, agents, onClose, onSave }) {
+      const [editedRoles, setEditedRoles] = useState(roles || {});
+
+      const handleRoleChange = (agentId, role) => {
+        setEditedRoles(prev => ({ ...prev, [agentId]: role }));
+      };
+
+      const handleSave = async () => {
+        try {
+          await fetch(`/api/threads/${threadId}/roles`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(editedRoles)
+          });
+          onSave(editedRoles);
+          onClose();
+        } catch (err) {
+          console.error('保存角色配置失败:', err);
+          alert('保存失败');
+        }
+      };
 
       return (
-        <div className="token-panel">
-          <h4>📊 Session 消耗</h4>
-          <div className="token-stats">
-            <span>输入: {usage.input.toLocaleString()}</span>
-            <span>输出: {usage.output.toLocaleString()}</span>
-            <span>总计: {usage.total.toLocaleString()}</span>
+        <Modal title="对话角色配置" onClose={onClose}>
+          <div style={{ marginBottom: 12, fontSize: 13, color: '#666' }}>
+            为这个对话中的猫咪设置角色，例如：PL、开发、Reviewer、测试等
           </div>
-          <div className="token-bar">
-            <div className={`token-bar-fill ${barClass}`} style={{ width: `${Math.min(percentage, 100)}%` }} />
+          {Object.entries(agents).map(([agentId, agent]) => (
+            <div key={agentId} style={{ marginBottom: 12 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 18 }}>{agent.avatar}</span>
+                <span style={{ fontWeight: 500, minWidth: 80 }}>{agent.name}</span>
+              </label>
+              <input
+                value={editedRoles[agentId] || ''}
+                onChange={e => handleRoleChange(agentId, e.target.value)}
+                placeholder="例如：PL（产品经理）"
+                style={{ marginTop: 4 }}
+              />
+            </div>
+          ))}
+          <div className="modal-buttons">
+            <button className="cancel-btn" onClick={onClose}>取消</button>
+            <button className="confirm-btn" onClick={handleSave}>保存</button>
           </div>
-          <div className="token-cost">
-            ${usage.cost.toFixed(4)} / ${usage.budget.toFixed(2)} 预算
+        </Modal>
+      );
+    }
+
+    // Token 使用量面板
+    function TokenPanel({ usage, usageHistory }) {
+      const history = usageHistory || [];
+      const now = new Date();
+
+      // 生成最近10分钟的时间槽（类似 UU 加速器）
+      const timelineSlots = [];
+      for (let i = 9; i >= 0; i--) {
+        const slotTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(),
+                                   now.getHours(), now.getMinutes() - i);
+        const slotKey = slotTime.getTime();
+        const historyEntry = history.find(h => h.minute === slotKey);
+        timelineSlots.push({
+          minute: slotKey,
+          tokens: historyEntry ? historyEntry.tokens : 0,
+          label: slotTime.getMinutes(),
+          isCurrent: i === 0
+        });
+      }
+
+      const maxTokens = Math.max(...timelineSlots.map(s => s.tokens), 100);
+
+      return (
+        <div style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: 12,
+          padding: 12,
+          marginBottom: 12,
+          color: 'white'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 12, opacity: 0.9 }}>📊 Token 消耗</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{usage.total.toLocaleString()}</span>
+          </div>
+
+          {/* 每分钟柱状图 - UU 加速器风格 */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            height: 40,
+            gap: 3,
+            marginBottom: 4
+          }}>
+            {timelineSlots.map((slot, i) => {
+              const height = maxTokens > 0 ? (slot.tokens / maxTokens) * 100 : 0;
+              return (
+                <div key={i} style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 2
+                }}>
+                  <div style={{
+                    width: '100%',
+                    height: slot.tokens > 0 ? `${Math.max(height, 10)}%` : 4,
+                    minHeight: 4,
+                    background: slot.isCurrent
+                      ? 'rgba(255,255,255,0.95)'
+                      : slot.tokens > 0
+                        ? 'rgba(255,255,255,0.6)'
+                        : 'rgba(255,255,255,0.2)',
+                    borderRadius: 2,
+                    transition: 'height 0.3s',
+                    boxShadow: slot.isCurrent ? '0 0 8px rgba(255,255,255,0.5)' : 'none'
+                  }} />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 时间标签 */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            fontSize: 8,
+            opacity: 0.7,
+            marginBottom: 8
+          }}>
+            <span>{timelineSlots[0].label}分</span>
+            <span>现在</span>
+          </div>
+
+          {/* 统计数据 */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 8,
+            fontSize: 10,
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: 8,
+            padding: 8
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ opacity: 0.7 }}>输入</div>
+              <div style={{ fontWeight: 600 }}>{usage.input.toLocaleString()}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ opacity: 0.7 }}>输出</div>
+              <div style={{ fontWeight: 600 }}>{usage.output.toLocaleString()}</div>
+            </div>
           </div>
         </div>
       );
@@ -1127,8 +1646,8 @@
       );
     }
 
-    // 猫咪面板
-    function AgentPanel({ agents, onDelete, onAdd }) {
+    // 猫咪面板 - 支持 Steering 模式
+    function AgentPanel({ agents, onDelete, onAdd, runningAgents, onToggleSelection, onStopAgent }) {
       const [showModal, setShowModal] = useState(false);
 
       return (
@@ -1137,11 +1656,33 @@
           <div className="agent-list">
             {Object.entries(agents).map(([id, agent]) => {
               const isActive = agent.status !== 'idle';
+              const isRunning = runningAgents && runningAgents[id];
+              const isSelected = agent.selected;
               return (
-                <div key={id} className={`agent-item ${isActive ? 'active' : ''}`}>
+                <div key={id} className={`agent-item ${isActive ? 'active' : ''} ${isSelected ? 'selected' : ''}`}>
+                  {/* Steering 模式：选择框 */}
+                  <input
+                    type="checkbox"
+                    checked={isSelected || false}
+                    onChange={() => onToggleSelection && onToggleSelection(id)}
+                    style={{ marginRight: 8, cursor: 'pointer' }}
+                    title="选中后可同时发送消息给多只猫咪"
+                  />
                   <span className="avatar">{agent.avatar}</span>
-                  <div className="info">
-                    <div className="name">{agent.name}</div>
+                  <div className="info" style={{ flex: 1 }}>
+                    <div className="name" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {agent.name}
+                      {/* CLI 类型标签 */}
+                      {agent.type === 'deepseek' && (
+                        <span style={{
+                          fontSize: 9,
+                          background: '#e8f4ff',
+                          color: '#0066cc',
+                          padding: '1px 4px',
+                          borderRadius: 3
+                        }}>DeepSeek</span>
+                      )}
+                    </div>
                     <div className={`status ${agent.status || 'idle'}`}>
                       <span className={`status-icon ${agent.status || 'idle'}`}></span>
                       {STATUS_ICONS[agent.status] || '💤'} {agent.statusMessage || '等待召唤'}
@@ -1152,6 +1693,25 @@
                       </div>
                     )}
                   </div>
+                  {/* Steering 模式：单独停止按钮 */}
+                  {isRunning && (
+                    <button
+                      onClick={() => onStopAgent && onStopAgent(id)}
+                      style={{
+                        padding: '4px 8px',
+                        background: '#ff6b6b',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        fontSize: 11,
+                        marginRight: 4
+                      }}
+                      title="停止这只猫咪"
+                    >
+                      停止
+                    </button>
+                  )}
                   {id !== 'opus' && (
                     <button className="delete-btn" onClick={() => onDelete(id)}>×</button>
                   )}
@@ -1289,7 +1849,7 @@
     }
 
     // 待确认工具横幅
-    function PendingToolBanner({ pendingTool, onClear }) {
+    function PendingToolBanner({ pendingTool, onConfirm, onClear }) {
       if (!pendingTool) return null;
 
       return (
@@ -1301,7 +1861,23 @@
               <div className="tool-desc">{pendingTool.description || '等待确认...'}</div>
             </div>
           </div>
-          <button className="clear-btn" onClick={onClear} title="取消">×</button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={onConfirm}
+              style={{
+                padding: '4px 12px',
+                background: '#667eea',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              确认执行
+            </button>
+            <button className="clear-btn" onClick={onClear} title="取消">取消</button>
+          </div>
         </div>
       );
     }
@@ -1480,10 +2056,21 @@
     }
 
     // 输入框
-    function InputBox({ onSend, disabled, onStop, showStop }) {
+    function InputBox({ onSend, disabled, onStop, showStop, agents }) {
       const [input, setInput] = useState('');
       const [isRecording, setIsRecording] = useState(false);
+      const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+      const [mentionSearch, setMentionSearch] = useState('');
+      const [mentionStartPos, setMentionStartPos] = useState(-1);
+      const inputRef = useRef(null);
       const recognitionRef = useRef(null);
+
+      // 获取可用的 agents 列表
+      const agentList = agents ? Object.values(agents) : [];
+      const filteredAgents = agentList.filter(agent =>
+        agent.name.toLowerCase().includes(mentionSearch.toLowerCase()) ||
+        agent.id.toLowerCase().includes(mentionSearch.toLowerCase())
+      );
 
       // 初始化语音识别
       useEffect(() => {
@@ -1510,6 +2097,55 @@
         }
       }, []);
 
+      // 点击外部关闭下拉菜单
+      useEffect(() => {
+        const handleClickOutside = (e) => {
+          if (inputRef.current && !inputRef.current.contains(e.target)) {
+            setShowMentionDropdown(false);
+          }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+      }, []);
+
+      const handleInputChange = (e) => {
+        const value = e.target.value;
+        const cursorPos = e.target.selectionStart;
+        setInput(value);
+
+        // 检测 @ 符号
+        const lastAtIndex = value.lastIndexOf('@', cursorPos);
+        if (lastAtIndex !== -1) {
+          // 检查 @ 后面是否有空格（如果有空格说明 @mention 已结束）
+          const textAfterAt = value.substring(lastAtIndex + 1, cursorPos);
+          if (!textAfterAt.includes(' ')) {
+            setMentionStartPos(lastAtIndex);
+            setMentionSearch(textAfterAt);
+            setShowMentionDropdown(true);
+          } else {
+            setShowMentionDropdown(false);
+          }
+        } else {
+          setShowMentionDropdown(false);
+        }
+      };
+
+      const selectMention = (agent) => {
+        if (mentionStartPos === -1) return;
+        const beforeMention = input.substring(0, mentionStartPos);
+        const afterCursor = input.substring(inputRef.current.selectionStart);
+        const newInput = beforeMention + '@' + agent.name + ' ' + afterCursor;
+        setInput(newInput);
+        setShowMentionDropdown(false);
+        setMentionStartPos(-1);
+        // 聚焦回输入框
+        setTimeout(() => {
+          inputRef.current?.focus();
+          const newPos = beforeMention.length + agent.name.length + 2;
+          inputRef.current?.setSelectionRange(newPos, newPos);
+        }, 0);
+      };
+
       const handleSubmit = (e) => {
         e.preventDefault();
         if (input.trim() && !disabled) { onSend(input.trim()); setInput(''); }
@@ -1533,9 +2169,72 @@
       const speechSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 
       return (
-        <form className="input-form" onSubmit={handleSubmit}>
-          <input type="text" value={input} onChange={(e) => setInput(e.target.value)}
-            placeholder="输入消息... (@布偶猫 可以指定猫咪)" disabled={disabled} />
+        <form className="input-form" onSubmit={handleSubmit} style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={handleInputChange}
+              placeholder="输入消息... (@ 选择猫咪，@全体成员 召唤所有)"
+              disabled={disabled}
+              style={{ width: '100%' }}
+            />
+            {/* @提及下拉菜单 */}
+            {showMentionDropdown && (
+              <div style={{
+                position: 'absolute',
+                bottom: '100%',
+                left: 0,
+                marginBottom: 4,
+                background: 'white',
+                border: '1px solid #ddd',
+                borderRadius: 8,
+                boxShadow: '0 2px 10px rgba(0,0,0,0.15)',
+                maxHeight: 200,
+                overflowY: 'auto',
+                minWidth: 180,
+                zIndex: 1000
+              }}>
+                {/* 全体成员选项 */}
+                <div
+                  onClick={() => selectMention({ name: '全体成员' })}
+                  style={{
+                    padding: '8px 12px',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid #eee',
+                    background: '#f0f7ff',
+                    fontWeight: 500
+                  }}
+                  onMouseEnter={(e) => e.target.style.background = '#e0f0ff'}
+                  onMouseLeave={(e) => e.target.style.background = '#f0f7ff'}
+                >
+                  📢 @全体成员
+                </div>
+                {filteredAgents.map(agent => (
+                  <div
+                    key={agent.id}
+                    onClick={() => selectMention(agent)}
+                    style={{
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8
+                    }}
+                    onMouseEnter={(e) => e.target.style.background = '#f5f5f5'}
+                    onMouseLeave={(e) => e.target.style.background = 'white'}
+                  >
+                    <span>{agent.avatar || '🐱'}</span>
+                    <span>{agent.name}</span>
+                  </div>
+                ))}
+                {filteredAgents.length === 0 && (
+                  <div style={{ padding: '8px 12px', color: '#999' }}>没有匹配的猫咪</div>
+                )}
+              </div>
+            )}
+          </div>
           {speechSupported && (
             <button
               type="button"
@@ -1547,13 +2246,12 @@
               {isRecording ? '⏹️' : '🎤'}
             </button>
           )}
-          {showStop ? (
-            <button type="button" className="stop-btn" onClick={onStop}>停止</button>
-          ) : (
-            <button type="submit" disabled={disabled || !input.trim()}>
-              发送
-            </button>
+          {showStop && (
+            <button type="button" className="stop-btn" onClick={onStop}>停止全部</button>
           )}
+          <button type="submit" disabled={disabled || !input.trim()}>
+            发送
+          </button>
         </form>
       );
     }
@@ -1722,30 +2420,754 @@
       );
     }
 
+    // MCP 面板组件
+    function MCPPanel({ servers, onAdd, onDelete, onStart, onStop }) {
+      const [expanded, setExpanded] = useState(false);
+      const [showAddForm, setShowAddForm] = useState(false);
+      const [formData, setFormData] = useState({
+        name: '',
+        type: 'stdio',
+        command: '',
+        args: '',
+        url: ''
+      });
+
+      const handleSubmit = () => {
+        if (!formData.name) return;
+        onAdd({
+          name: formData.name,
+          type: formData.type,
+          command: formData.type === 'stdio' ? formData.command : undefined,
+          args: formData.args ? formData.args.split(' ').filter(Boolean) : [],
+          url: formData.type === 'http' ? formData.url : undefined
+        });
+        setFormData({ name: '', type: 'stdio', command: '', args: '', url: '' });
+        setShowAddForm(false);
+      };
+
+      return (
+        <div className="mcp-panel">
+          <h4 onClick={() => setExpanded(!expanded)}>
+            <span>🔌 MCP 服务器 ({servers.length})</span>
+            <span>{expanded ? '▼' : '▶'}</span>
+          </h4>
+
+          {expanded && (
+            <>
+              <div className="mcp-server-list">
+                {servers.map(server => (
+                  <div key={server.id} className="mcp-server-item">
+                    <div className="header">
+                      <span className="name">
+                        {server.name}
+                        <span className={`status-badge ${server.status}`}>
+                          {server.status === 'running' ? '运行中' :
+                           server.status === 'starting' ? '启动中' :
+                           server.status === 'error' ? '错误' : '已停止'}
+                        </span>
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 10, color: '#666' }}>
+                      类型: {server.type}
+                      {server.type === 'stdio' && server.command && ` | 命令: ${server.command}`}
+                      {server.type === 'http' && server.url && ` | URL: ${server.url}`}
+                    </div>
+                    <div className="actions">
+                      {server.status === 'running' ? (
+                        <button onClick={() => onStop(server.id)}>停止</button>
+                      ) : (
+                        <button className="primary" onClick={() => onStart(server.id)}>启动</button>
+                      )}
+                      <button className="danger" onClick={() => onDelete(server.id)}>删除</button>
+                    </div>
+                  </div>
+                ))}
+                {servers.length === 0 && (
+                  <div style={{ color: '#999', textAlign: 'center', padding: 8 }}>
+                    暂无 MCP 服务器
+                  </div>
+                )}
+              </div>
+
+              {showAddForm ? (
+                <div className="mcp-add-form">
+                  <input
+                    placeholder="服务器名称"
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  />
+                  <select
+                    value={formData.type}
+                    onChange={e => setFormData({ ...formData, type: e.target.value })}
+                  >
+                    <option value="stdio">Stdio</option>
+                    <option value="http">HTTP/SSE</option>
+                  </select>
+                  {formData.type === 'stdio' ? (
+                    <>
+                      <input
+                        placeholder="命令 (如: npx)"
+                        value={formData.command}
+                        onChange={e => setFormData({ ...formData, command: e.target.value })}
+                      />
+                      <input
+                        placeholder="参数 (空格分隔)"
+                        value={formData.args}
+                        onChange={e => setFormData({ ...formData, args: e.target.value })}
+                      />
+                    </>
+                  ) : (
+                    <input
+                      placeholder="服务器 URL"
+                      value={formData.url}
+                      onChange={e => setFormData({ ...formData, url: e.target.value })}
+                    />
+                  )}
+                  <div className="form-row">
+                    <button onClick={() => setShowAddForm(false)}>取消</button>
+                    <button className="primary" onClick={handleSubmit}>添加</button>
+                  </div>
+                </div>
+              ) : (
+                <button onClick={() => setShowAddForm(true)} style={{ width: '100%', padding: 4 }}>
+                  + 添加服务器
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // Skill 面板组件
+    function SkillPanel({ skills, templates, agents, skillAssignments, onAdd, onDelete, onExecute, onUpdateAssignment }) {
+      const [expanded, setExpanded] = useState(false);
+      const [showAddForm, setShowAddForm] = useState(false);
+      const [addMode, setAddMode] = useState('template'); // 'template' or 'custom'
+      const [selectedTemplate, setSelectedTemplate] = useState(null);
+      const [selectedSkill, setSelectedSkill] = useState(null); // 查看技能详情
+      const [editingAssignment, setEditingAssignment] = useState(null); // 编辑授权
+      const [selectedAgentIds, setSelectedAgentIds] = useState([]); // 选中的 agent IDs
+      const [formData, setFormData] = useState({
+        name: '',
+        description: '',
+        type: 'http',
+        method: 'GET',
+        urlTemplate: '',
+        script: ''
+      });
+
+      const handleCreateFromTemplate = () => {
+        if (!selectedTemplate) return;
+        onAdd({
+          templateId: selectedTemplate.id,
+          name: formData.name || selectedTemplate.name,
+          description: formData.description || selectedTemplate.description
+        });
+        setSelectedTemplate(null);
+        setFormData({ name: '', description: '', type: 'http', method: 'GET', urlTemplate: '', script: '' });
+        setShowAddForm(false);
+      };
+
+      const handleCreateCustom = () => {
+        if (!formData.name) return;
+        onAdd({
+          name: formData.name,
+          description: formData.description,
+          type: formData.type,
+          config: formData.type === 'http' ? {
+            method: formData.method,
+            urlTemplate: formData.urlTemplate
+          } : {
+            script: formData.script
+          }
+        });
+        setFormData({ name: '', description: '', type: 'http', method: 'GET', urlTemplate: '', script: '' });
+        setShowAddForm(false);
+      };
+
+      const handleViewSkill = async (skill) => {
+        if (skill.type === 'prompt') {
+          // 对于 prompt 类型，执行并显示内容
+          try {
+            const res = await fetch(`/api/skills/${skill.id}/execute`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ params: {} })
+            });
+            const result = await res.json();
+            if (result.success) {
+              setSelectedSkill({ ...skill, promptContent: result.prompt });
+            }
+          } catch (err) {
+            console.error('获取技能内容失败:', err);
+          }
+        } else {
+          setSelectedSkill(skill);
+        }
+      };
+
+      // 按分类分组技能
+      const skillsByCategory = skills.reduce((acc, skill) => {
+        const cat = skill.category || 'custom';
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(skill);
+        return acc;
+      }, {});
+
+      const categoryNames = {
+        'code_review': '📝 Code Review',
+        'search': '🔍 搜索',
+        'network': '🌐 网络',
+        'data': '📊 数据',
+        'analysis': '📈 分析',
+        'utility': '🔧 工具',
+        'language': '🌍 语言',
+        'custom': '⭐ 自定义'
+      };
+
+      return (
+        <div className="skill-panel">
+          <h4 onClick={() => setExpanded(!expanded)}>
+            <span>⚡ Skills ({skills.length})</span>
+            <span>{expanded ? '▼' : '▶'}</span>
+          </h4>
+
+          {expanded && (
+            <>
+              {editingAssignment ? (
+                // 编辑授权视图
+                <div className="skill-detail">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontWeight: 500 }}>授权: {editingAssignment.name}</span>
+                    <button onClick={() => { setEditingAssignment(null); setSelectedAgentIds([]); }} style={{ padding: '2px 8px', fontSize: 10 }}>取消</button>
+                  </div>
+                  <div style={{ fontSize: 10, color: '#666', marginBottom: 8 }}>
+                    选择可以使用此技能的猫咪：
+                  </div>
+                  <div style={{ maxHeight: 200, overflow: 'auto', marginBottom: 8 }}>
+                    {Object.values(agents || {}).map(agent => {
+                      const currentAssignments = skillAssignments[editingAssignment.id] || [];
+                      const isAssigned = currentAssignments.some(a => (a.id || a) === agent.id);
+                      return (
+                        <label key={agent.id} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          padding: '4px 8px',
+                          marginBottom: 2,
+                          background: isAssigned ? '#e0f0ff' : '#f8f9fa',
+                          borderRadius: 4,
+                          cursor: 'pointer',
+                          fontSize: 11
+                        }}>
+                          <input
+                            type="checkbox"
+                            checked={isAssigned}
+                            onChange={async () => {
+                              const currentIds = (skillAssignments[editingAssignment.id] || []).map(a => a.id || a);
+                              const newIds = isAssigned
+                                ? currentIds.filter(id => id !== agent.id)
+                                : [...currentIds, agent.id];
+                              await onUpdateAssignment(editingAssignment.id, newIds);
+                            }}
+                          />
+                          <span>{agent.avatar || '🐱'} {agent.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div style={{ fontSize: 9, color: '#999', borderTop: '1px solid #eee', paddingTop: 8 }}>
+                    已授权: {(skillAssignments[editingAssignment.id] || []).length} 只猫咪
+                  </div>
+                </div>
+              ) : selectedSkill ? (
+                // 技能详情视图
+                <div className="skill-detail">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontWeight: 500 }}>{selectedSkill.name}</span>
+                    <button onClick={() => setSelectedSkill(null)} style={{ padding: '2px 8px', fontSize: 10 }}>返回</button>
+                  </div>
+
+                  {selectedSkill.triggers && selectedSkill.triggers.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      <div style={{ fontSize: 10, color: '#666', marginBottom: 4 }}>触发词：</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {selectedSkill.triggers.map(t => (
+                          <span key={t} style={{
+                            background: '#e0f0ff',
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            fontSize: 9,
+                            color: '#667eea'
+                          }}>{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedSkill.promptContent && (
+                    <div style={{
+                      background: '#f8f9fa',
+                      padding: 8,
+                      borderRadius: 4,
+                      fontSize: 10,
+                      maxHeight: 300,
+                      overflow: 'auto',
+                      whiteSpace: 'pre-wrap'
+                    }}>
+                      {selectedSkill.promptContent}
+                    </div>
+                  )}
+
+                  {!selectedSkill.promptContent && (
+                    <div style={{ fontSize: 10, color: '#666' }}>
+                      {selectedSkill.description}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* 按分类显示技能列表 */}
+                  {Object.entries(skillsByCategory).map(([category, categorySkills]) => (
+                    <div key={category} style={{ marginBottom: 8 }}>
+                      <div style={{ fontSize: 10, color: '#667eea', fontWeight: 500, marginBottom: 4 }}>
+                        {categoryNames[category] || category} ({categorySkills.length})
+                      </div>
+                      {categorySkills.map(skill => {
+                        const assignedAgents = skillAssignments[skill.id] || [];
+                        return (
+                          <div key={skill.id} className="skill-item" style={{ marginBottom: 4 }}>
+                            <div className="header">
+                              <span className="name">
+                                {skill.name}
+                                {skill.isTemplate && <span style={{ fontSize: 8, color: '#28a745', marginLeft: 4 }}>内置</span>}
+                              </span>
+                              <span style={{ fontSize: 9, color: assignedAgents.length > 0 ? '#667eea' : '#999' }}>
+                                {assignedAgents.length} 只猫
+                              </span>
+                            </div>
+                            {skill.triggers && skill.triggers.length > 0 && (
+                              <div style={{ fontSize: 9, color: '#667eea', marginTop: 2 }}>
+                                触发: {skill.triggers.slice(0, 2).join(', ')}{skill.triggers.length > 2 && '...'}
+                              </div>
+                            )}
+                            {assignedAgents.length > 0 && (
+                              <div style={{ fontSize: 8, color: '#666', marginTop: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                                {assignedAgents.slice(0, 3).map(a => (
+                                  <span key={a.id} style={{ background: '#f0f7ff', padding: '1px 4px', borderRadius: 2 }}>
+                                    {a.avatar || '🐱'} {a.name}
+                                  </span>
+                                ))}
+                                {assignedAgents.length > 3 && <span style={{ color: '#999' }}>+{assignedAgents.length - 3}</span>}
+                              </div>
+                            )}
+                            <div className="actions">
+                              <button onClick={() => handleViewSkill(skill)}>查看</button>
+                              <button
+                                onClick={() => setEditingAssignment(skill)}
+                                style={{ background: assignedAgents.length > 0 ? '#667eea' : '#f0f0f0', color: assignedAgents.length > 0 ? 'white' : '#333' }}
+                              >
+                                授权
+                              </button>
+                              {!skill.isTemplate && (
+                                <button className="danger" onClick={() => onDelete(skill.id)}>删除</button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+
+                  {skills.length === 0 && (
+                    <div style={{ color: '#999', textAlign: 'center', padding: 8 }}>
+                      暂无 Skills
+                    </div>
+                  )}
+
+                  {showAddForm ? (
+                    <div className="skill-add-form" style={{ marginTop: 12, borderTop: '1px solid #eee', paddingTop: 8 }}>
+                      <div className="form-row">
+                        <button
+                          style={{ background: addMode === 'template' ? '#667eea' : '#f0f0f0', color: addMode === 'template' ? 'white' : '#333' }}
+                          onClick={() => setAddMode('template')}
+                        >
+                          从模板创建
+                        </button>
+                        <button
+                          style={{ background: addMode === 'custom' ? '#667eea' : '#f0f0f0', color: addMode === 'custom' ? 'white' : '#333' }}
+                          onClick={() => setAddMode('custom')}
+                        >
+                          自定义
+                        </button>
+                      </div>
+
+                      {addMode === 'template' ? (
+                        <>
+                          <div className="template-grid">
+                            {templates.filter(t => t.type !== 'prompt').map(t => (
+                              <div
+                                key={t.id}
+                                className={`template-item ${selectedTemplate?.id === t.id ? 'selected' : ''}`}
+                                onClick={() => setSelectedTemplate(t)}
+                              >
+                                <div className="name">{t.name}</div>
+                                <div className="desc">{t.description}</div>
+                              </div>
+                            ))}
+                          </div>
+                          {selectedTemplate && (
+                            <>
+                              <input
+                                placeholder="自定义名称 (可选)"
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                              />
+                              <input
+                                placeholder="自定义描述 (可选)"
+                                value={formData.description}
+                                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                              />
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <input
+                            placeholder="名称"
+                            value={formData.name}
+                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                          />
+                          <input
+                            placeholder="描述"
+                            value={formData.description}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                          />
+                          <select
+                            value={formData.type}
+                            onChange={e => setFormData({ ...formData, type: e.target.value })}
+                          >
+                            <option value="http">HTTP 请求</option>
+                            <option value="python">Python 脚本</option>
+                          </select>
+                          {formData.type === 'http' ? (
+                            <>
+                              <select
+                                value={formData.method}
+                                onChange={e => setFormData({ ...formData, method: e.target.value })}
+                              >
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                              </select>
+                              <input
+                                placeholder="URL 模板 (如: https://api.example.com?q={query})"
+                                value={formData.urlTemplate}
+                                onChange={e => setFormData({ ...formData, urlTemplate: e.target.value })}
+                              />
+                            </>
+                          ) : (
+                            <textarea
+                              placeholder="Python 脚本 (使用 result 变量返回结果)"
+                              value={formData.script}
+                              onChange={e => setFormData({ ...formData, script: e.target.value })}
+                              rows={4}
+                            />
+                          )}
+                        </>
+                      )}
+
+                      <div className="form-row">
+                        <button onClick={() => setShowAddForm(false)}>取消</button>
+                        <button className="primary" onClick={addMode === 'template' ? handleCreateFromTemplate : handleCreateCustom}>
+                          创建
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setShowAddForm(true)} style={{ width: '100%', padding: 4, marginTop: 8 }}>
+                      + 添加自定义 Skill
+                    </button>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // 工具授权面板组件
+    function ToolAuthorizationPanel({ agentId, mcpTools, skills, currentAuth, onUpdate }) {
+      const [expanded, setExpanded] = useState(false);
+      const [selectedMcpTools, setSelectedMcpTools] = useState(currentAuth?.mcpTools || []);
+      const [selectedSkills, setSelectedSkills] = useState(currentAuth?.skills || []);
+
+      useEffect(() => {
+        setSelectedMcpTools(currentAuth?.mcpTools || []);
+        setSelectedSkills(currentAuth?.skills || []);
+      }, [currentAuth]);
+
+      const handleToggleMcpTool = (toolId) => {
+        const updated = selectedMcpTools.includes(toolId)
+          ? selectedMcpTools.filter(id => id !== toolId)
+          : [...selectedMcpTools, toolId];
+        setSelectedMcpTools(updated);
+      };
+
+      const handleToggleSkill = (skillId) => {
+        const updated = selectedSkills.includes(skillId)
+          ? selectedSkills.filter(id => id !== skillId)
+          : [...selectedSkills, skillId];
+        setSelectedSkills(updated);
+      };
+
+      const handleSave = () => {
+        onUpdate(agentId, {
+          mcpTools: selectedMcpTools,
+          skills: selectedSkills
+        });
+      };
+
+      return (
+        <div className="tool-auth-panel">
+          <h5 onClick={() => setExpanded(!expanded)} style={{ cursor: 'pointer' }}>
+            <span>🛠️ 工具授权</span>
+            <span>{expanded ? '▼' : '▶'}</span>
+          </h5>
+
+          {expanded && (
+            <>
+              {mcpTools.length > 0 && (
+                <div className="tool-auth-section">
+                  <div style={{ fontWeight: 500, marginBottom: 4 }}>MCP 工具</div>
+                  {mcpTools.map(tool => (
+                    <label key={`${tool.serverId}-${tool.name}`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedMcpTools.includes(`${tool.serverId}:${tool.name}`)}
+                        onChange={() => handleToggleMcpTool(`${tool.serverId}:${tool.name}`)}
+                      />
+                      <span>{tool.name} <span style={{ color: '#999' }}>({tool.serverName})</span></span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {skills.length > 0 && (
+                <div className="tool-auth-section">
+                  <div style={{ fontWeight: 500, marginBottom: 4 }}>Skills</div>
+                  {skills.map(skill => (
+                    <label key={skill.id}>
+                      <input
+                        type="checkbox"
+                        checked={selectedSkills.includes(skill.id)}
+                        onChange={() => handleToggleSkill(skill.id)}
+                      />
+                      <span>{skill.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {mcpTools.length === 0 && skills.length === 0 && (
+                <div style={{ color: '#999', fontSize: 10, padding: 4 }}>
+                  暂无可授权的工具
+                </div>
+              )}
+
+              <button
+                onClick={handleSave}
+                style={{ marginTop: 8, width: '100%', padding: 4, background: '#667eea', color: 'white', border: 'none', borderRadius: 4 }}
+              >
+                保存授权
+              </button>
+            </>
+          )}
+        </div>
+      );
+    }
+
+    // 右侧工具栏组件
+    function RightSidebar({
+      mcpServers, onAddMcpServer, onDeleteMcpServer, onStartMcpServer, onStopMcpServer,
+      skills, skillTemplates, onAddSkill, onDeleteSkill, onExecuteSkill,
+      agents, skillAssignments, onUpdateSkillAssignment,
+      currentAgent, mcpTools, agentToolsAuth, onUpdateAgentTools
+    }) {
+      const [activeTab, setActiveTab] = useState('skills'); // 默认显示 Skills
+
+      return (
+        <div className="right-sidebar">
+          <div className="right-sidebar-tabs">
+            <button
+              className={`right-sidebar-tab ${activeTab === 'skills' ? 'active' : ''}`}
+              onClick={() => setActiveTab('skills')}
+            >
+              ⚡ Skills
+            </button>
+            <button
+              className={`right-sidebar-tab ${activeTab === 'mcp' ? 'active' : ''}`}
+              onClick={() => setActiveTab('mcp')}
+            >
+              🔌 MCP
+            </button>
+            <button
+              className={`right-sidebar-tab ${activeTab === 'auth' ? 'active' : ''}`}
+              onClick={() => setActiveTab('auth')}
+            >
+              🔐 授权
+            </button>
+          </div>
+          <div className="right-sidebar-content">
+            {activeTab === 'skills' && (
+              <SkillPanel
+                skills={skills}
+                templates={skillTemplates}
+                agents={agents}
+                skillAssignments={skillAssignments}
+                onAdd={onAddSkill}
+                onDelete={onDeleteSkill}
+                onExecute={onExecuteSkill}
+                onUpdateAssignment={onUpdateSkillAssignment}
+              />
+            )}
+            {activeTab === 'mcp' && (
+              <MCPPanel
+                servers={mcpServers}
+                onAdd={onAddMcpServer}
+                onDelete={onDeleteMcpServer}
+                onStart={onStartMcpServer}
+                onStop={onStopMcpServer}
+              />
+            )}
+            {activeTab === 'auth' && (
+              currentAgent?.id ? (
+                <ToolAuthorizationPanel
+                  agentId={currentAgent.id}
+                  mcpTools={mcpTools}
+                  skills={skills}
+                  currentAuth={agentToolsAuth[currentAgent.id]}
+                  onUpdate={onUpdateAgentTools}
+                />
+              ) : (
+                <div style={{ padding: 16, textAlign: 'center', color: '#666', fontSize: 12 }}>
+                  请先选择一只猫咪
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Steering 模式指示器 - 显示所有正在运行的猫咪
+    function RunningAgentsIndicator({ runningAgents, agents, onStopAgent }) {
+      const runningList = Object.entries(runningAgents);
+      if (runningList.length === 0) return null;
+
+      return (
+        <div style={{
+          background: '#f8f9fa',
+          borderRadius: 8,
+          padding: '8px 12px',
+          marginBottom: 8,
+          border: '1px solid #e9ecef'
+        }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            <span style={{ fontSize: 12, color: '#666' }}>
+              运行中:
+            </span>
+            {runningList.map(([agentId, data]) => {
+              const agentInfo = agents[agentId] || data.agent;
+              return (
+                <div key={agentId} style={{
+                  background: '#fff',
+                  borderRadius: 6,
+                  padding: '4px 8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 12,
+                  border: '1px solid #dee2e6'
+                }}>
+                  <span>{agentInfo?.avatar || '🐱'}</span>
+                  <span>{agentInfo?.name || agentId}</span>
+                  <span style={{ color: '#667eea' }}>
+                    {data.agentStatus === 'thinking' ? '💭' :
+                     data.agentStatus === 'streaming' ? '✍️' :
+                     data.agentStatus === 'tool' ? '🔧' : '⏳'}
+                  </span>
+                  <button
+                    onClick={() => onStopAgent(agentId)}
+                    style={{
+                      background: '#ff6b6b',
+                      border: 'none',
+                      borderRadius: 4,
+                      padding: '2px 6px',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: 10
+                    }}
+                  >
+                    停止
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     // 主应用
     function App() {
       const [threads, setThreads] = useState([]);
       const [threadId, setThreadId] = useState(null);
       const [messages, setMessages] = useState([]);
       const [agents, setAgents] = useState({});
+
+      // Steering 模式：支持多猫咪同时运行
+      const [runningAgents, setRunningAgents] = useState({}); // { agentId: { status, streamingContent, processLogs } }
+      const [a2aMap, setA2aMap] = useState({}); // agentId -> callerId 映射
+
+      // 保留用于兼容性
       const [loading, setLoading] = useState(false);
       const [streamingContent, setStreamingContent] = useState('');
       const [currentAgent, setCurrentAgent] = useState(null);
-      const [currentCaller, setCurrentCaller] = useState(null); // A2A 调用者
+      const [currentCaller, setCurrentCaller] = useState(null);
       const [currentAgentStatus, setCurrentAgentStatus] = useState('thinking');
-      const [currentProcessLogs, setCurrentProcessLogs] = useState([]); // 当前消息的过程日志
+      const [currentProcessLogs, setCurrentProcessLogs] = useState([]);
+
       const [tokenUsage, setTokenUsage] = useState({ input: 0, output: 0, total: 0, cost: 0, budget: 100 });
+      const [usageHistory, setUsageHistory] = useState([]);
       const [showCreateModal, setShowCreateModal] = useState(false);
-      const [renameThread, setRenameThread] = useState(null); // 正在重命名的线程
-      const [a2aMap, setA2aMap] = useState({}); // agentId -> callerId 映射
-      const [autoSpeak, setAutoSpeak] = useState(false); // 自动朗读开关
-      const [vocabulary, setVocabulary] = useState({}); // 自定义词汇表
-      const [agentMemory, setAgentMemory] = useState({}); // 当前猫咪的长期记忆
-      const [pendingTool, setPendingTool] = useState(null); // 待确认的工具
+      const [renameThread, setRenameThread] = useState(null);
+      const [autoSpeak, setAutoSpeak] = useState(false);
+      const [vocabulary, setVocabulary] = useState({});
+      const [agentMemory, setAgentMemory] = useState({});
+      const [pendingTool, setPendingTool] = useState(null);
+      const [showRolesModal, setShowRolesModal] = useState(false);
+      const [threadRoles, setThreadRoles] = useState({}); // { agentId: roleDescription }
+
+      // MCP 和 Skill 状态
+      const [mcpServers, setMcpServers] = useState([]);
+      const [skills, setSkills] = useState([]);
+      const [skillTemplates, setSkillTemplates] = useState([]);
+      const [mcpTools, setMcpTools] = useState([]);
+      const [agentToolsAuth, setAgentToolsAuth] = useState({}); // { agentId: { mcpTools: [], skills: [] } }
+      const [skillAssignments, setSkillAssignments] = useState({}); // { skillId: [agentId, ...] }
+
       const socketRef = useRef(null);
       const messagesEndRef = useRef(null);
       const threadIdRef = useRef(null);
-      const processLogsRef = useRef([]); // 用于在事件处理器中引用
+      const processLogsRef = useRef([]);
+
+      // 判断是否有任何猫咪正在运行
+      const isAnyAgentRunning = Object.values(runningAgents).some(a => a.status === 'running');
+      const runningAgentCount = Object.values(runningAgents).filter(a => a.status === 'running').length;
 
       useEffect(() => { threadIdRef.current = threadId; }, [threadId]);
 
@@ -1765,6 +3187,15 @@
         } catch (err) { console.error('加载猫咪状态失败:', err); }
       };
 
+      const loadTokenUsage = async () => {
+        try {
+          const res = await fetch('/api/token-usage');
+          const data = await res.json();
+          console.log('[前端] 初始 token 使用量:', data);
+          setTokenUsage(data);
+        } catch (err) { console.error('加载 token 使用量失败:', err); }
+      };
+
       const loadVocabulary = async () => {
         try {
           const res = await fetch('/api/vocabulary');
@@ -1772,7 +3203,53 @@
         } catch (err) { console.error('加载词汇表失败:', err); }
       };
 
-      useEffect(() => { loadThreads(); loadAgents(); loadVocabulary(); }, []);
+      // 加载 MCP 服务器
+      const loadMcpServers = async () => {
+        try {
+          const res = await fetch('/api/mcp/servers');
+          setMcpServers(await res.json());
+        } catch (err) { console.error('加载 MCP 服务器失败:', err); }
+      };
+
+      // 加载 Skills
+      const loadSkills = async () => {
+        try {
+          const res = await fetch('/api/skills');
+          setSkills(await res.json());
+        } catch (err) { console.error('加载 Skills 失败:', err); }
+      };
+
+      // 加载 Skill 模板
+      const loadSkillTemplates = async () => {
+        try {
+          const res = await fetch('/api/skills/templates');
+          setSkillTemplates(await res.json());
+        } catch (err) { console.error('加载 Skill 模板失败:', err); }
+      };
+
+      // 加载所有 MCP 工具
+      const loadMcpTools = async () => {
+        try {
+          const res = await fetch('/api/mcp/tools');
+          setMcpTools(await res.json());
+        } catch (err) { console.error('加载 MCP 工具失败:', err); }
+      };
+
+      // 加载 Skill 授权配置
+      const loadSkillAssignments = async () => {
+        try {
+          const res = await fetch('/api/skills/assignments');
+          const data = await res.json();
+          // 转换为 { skillId: [agent objects] } 格式
+          const assignments = {};
+          for (const [skillId, agents] of Object.entries(data)) {
+            assignments[skillId] = agents;
+          }
+          setSkillAssignments(assignments);
+        } catch (err) { console.error('加载 Skill 授权配置失败:', err); }
+      };
+
+      useEffect(() => { loadThreads(); loadAgents(); loadVocabulary(); loadTokenUsage(); loadMcpServers(); loadSkills(); loadSkillTemplates(); loadMcpTools(); loadSkillAssignments(); }, []);
 
       useEffect(() => {
         socketRef.current = io();
@@ -1789,52 +3266,151 @@
 
         socketRef.current.on('event', (event) => {
           console.log('事件:', event);
+          const agentId = event.agent?.id || event.agentId;
+
           switch (event.type) {
             case 'start':
+              console.log('[前端] start 事件:', event.agent?.name, agentId, 'caller:', event.caller?.name);
+              // Steering 模式：更新特定猫咪的状态
+              setRunningAgents(prev => {
+                const isFirstAgent = Object.keys(prev).length === 0;
+                if (isFirstAgent) {
+                  // 第一只猫咪，清除全局日志
+                  setCurrentProcessLogs([]);
+                  processLogsRef.current = [];
+                }
+                return {
+                  ...prev,
+                  [agentId]: {
+                    status: 'running',
+                    agent: event.agent,
+                    caller: event.caller || null,
+                    agentStatus: 'thinking',
+                    streamingContent: '',
+                    processLogs: []
+                  }
+                };
+              });
+              // 更新全局状态（用于显示当前正在处理的猫咪）
               setCurrentAgent(event.agent);
               setCurrentCaller(event.caller || null);
               setCurrentAgentStatus('thinking');
               setStreamingContent('');
-              setCurrentProcessLogs([]); // 重置过程日志
-              processLogsRef.current = [];
               setLoading(true);
               // 记录 A2A 映射
               if (event.isA2A && event.caller) {
-                setA2aMap(prev => ({ ...prev, [event.agent.id]: event.caller.id }));
+                setA2aMap(prev => ({ ...prev, [agentId]: event.caller.id }));
               }
+              // 立即更新 agents 状态
+              setAgents(prev => ({
+                ...prev,
+                [agentId]: {
+                  ...prev[agentId],
+                  ...event.agent,
+                  status: 'thinking',
+                  statusMessage: '正在思考...'
+                }
+              }));
               break;
             case 'status':
+              // Steering 模式：更新特定猫咪的状态
+              setRunningAgents(prev => {
+                if (prev[agentId]) {
+                  return {
+                    ...prev,
+                    [agentId]: { ...prev[agentId], agentStatus: event.status }
+                  };
+                }
+                return prev;
+              });
               setCurrentAgentStatus(event.status);
               break;
             case 'stream':
+              // Steering 模式：更新特定猫咪的流式内容
+              setRunningAgents(prev => {
+                if (prev[agentId]) {
+                  return {
+                    ...prev,
+                    [agentId]: {
+                      ...prev[agentId],
+                      agentStatus: 'streaming',
+                      streamingContent: (prev[agentId].streamingContent || '') + event.text
+                    }
+                  };
+                }
+                return prev;
+              });
               setStreamingContent(prev => prev + event.text);
               setCurrentAgentStatus('streaming');
               break;
             case 'retry':
+              setRunningAgents(prev => {
+                if (prev[agentId]) {
+                  return { ...prev, [agentId]: { ...prev[agentId], agentStatus: 'retry' } };
+                }
+                return prev;
+              });
               setCurrentAgentStatus('retry');
               break;
             case 'complete':
+              console.log('[前端] complete 事件:', agentId, 'response:', event.response?.slice(0, 50));
+              // Steering 模式：从 runningAgents 移除该猫咪
+              setRunningAgents(prev => {
+                const updated = { ...prev };
+                delete updated[agentId];
+                return updated;
+              });
               setMessages(prev => [...prev, {
                 id: `msg-${Date.now()}`, threadId: threadIdRef.current,
-                agentId: event.agentId, role: 'assistant',
+                agentId: agentId, role: 'assistant',
                 content: event.response, timestamp: Date.now(),
                 isA2A: event.isA2A,
-                processLogs: event.processLogs || processLogsRef.current  // 使用服务器的或本地收集的日志
+                processLogs: event.processLogs || processLogsRef.current
               }]);
               setStreamingContent('');
-              setCurrentProcessLogs([]); // 清空当前过程日志
+              setCurrentProcessLogs([]);
               processLogsRef.current = [];
-              setCurrentAgent(null);
-              setCurrentCaller(null);
+              // 更新 agents 状态为 idle
+              if (agentId) {
+                setAgents(prev => ({
+                  ...prev,
+                  [agentId]: {
+                    ...prev[agentId],
+                    status: 'idle',
+                    statusMessage: '等待召唤'
+                  }
+                }));
+              }
               break;
             case 'done':
               console.log('[前端] 调用链完成:', event.callChain, 'isFinal:', event.isFinal);
               if (event.isFinal) {
-                setLoading(false);
+                // Steering 模式：检查是否所有猫咪都完成了
+                setRunningAgents(prev => {
+                  if (Object.keys(prev).length === 0) {
+                    setLoading(false);
+                  }
+                  return prev;
+                });
                 loadThreads();
-                // 可选：显示调用链摘要
-                if (event.callChain && event.callChain.length > 1) {
-                  console.log('[前端] A2A 调用链:', event.callChain.map(c => c.agentName).join(' -> '));
+                // 清空当前 agent
+                setCurrentAgent(null);
+                setCurrentCaller(null);
+                // 重置所有参与调用的 agents 状态为 idle
+                if (event.agentStats) {
+                  setAgents(prev => {
+                    const updated = { ...prev };
+                    Object.keys(event.agentStats).forEach(id => {
+                      if (updated[id]) {
+                        updated[id] = {
+                          ...updated[id],
+                          status: 'idle',
+                          statusMessage: '等待召唤'
+                        };
+                      }
+                    });
+                    return updated;
+                  });
                 }
               }
               break;
@@ -1862,6 +3438,14 @@
                 timestamp: Date.now()
               }]);
               break;
+            case 'tool_result':
+              console.log('[前端] 工具结果:', event.name);
+              // 可以在这里添加工具结果的显示
+              break;
+            case 'tool_error':
+              console.log('[前端] 工具错误:', event.name, event.error);
+              // 工具错误不计入最终消息，只记录日志
+              break;
             case 'error':
               console.error('错误:', event.message);
               setLoading(false);
@@ -1880,7 +3464,8 @@
 
         // 监听私有状态事件（thinking, tool, status）- 实时显示思考过程
         socketRef.current.on('status-event', (event) => {
-          console.log('[前端] 收到状态事件:', event.type, JSON.stringify(event).slice(0, 200));
+          console.log('[前端] 收到状态事件:', event.type, 'agentId:', event.agentId, JSON.stringify(event).slice(0, 200));
+          const agentId = event.agentId;
           const logEntry = {
             type: event.type,
             time: Date.now(),
@@ -1888,22 +3473,81 @@
             ...(event.type === 'tool' && { name: event.name, input: event.input }),
             ...(event.type === 'status' && { status: event.status, message: event.message })
           };
-          // 调试：显示每个日志条目
-          console.log('[前端] 日志条目:', logEntry.type, logEntry);
+
+          // Steering 模式：更新特定猫咪的 processLogs
+          if (agentId) {
+            setRunningAgents(prev => {
+              if (prev[agentId]) {
+                const existingLogs = prev[agentId].processLogs || [];
+                return {
+                  ...prev,
+                  [agentId]: {
+                    ...prev[agentId],
+                    processLogs: [...existingLogs, logEntry]
+                  }
+                };
+              }
+              return prev;
+            });
+          }
+
+          // 同时更新全局日志（兼容性）
           processLogsRef.current = [...processLogsRef.current, logEntry];
           setCurrentProcessLogs([...processLogsRef.current]);
         });
 
-        socketRef.current.on('agents-status', (status) => setAgents(status));
-
-        socketRef.current.on('agent-status-update', ({ agentId, status, message }) => {
-          setAgents(prev => ({
-            ...prev,
-            [agentId]: { ...prev[agentId], status, statusMessage: message }
-          }));
+        socketRef.current.on('agents-status', (status) => {
+          setAgents(status);
+          // 根据状态恢复 runningAgents（刷新页面后）
+          const running = {};
+          Object.entries(status).forEach(([agentId, agent]) => {
+            if (agent.status && agent.status !== 'idle') {
+              running[agentId] = {
+                status: 'running',
+                agent: { id: agentId, name: agent.name, avatar: agent.avatar },
+                agentStatus: agent.status,
+                streamingContent: '',
+                processLogs: []
+              };
+            }
+          });
+          if (Object.keys(running).length > 0) {
+            console.log('[前端] 恢复 runningAgents:', running);
+            setRunningAgents(running);
+          }
         });
 
-        socketRef.current.on('token-usage', (usage) => setTokenUsage(usage));
+        socketRef.current.on('agent-status-update', ({ agentId, status, message }) => {
+          console.log('[前端] 收到状态更新:', agentId, status, message);
+          setAgents(prev => {
+            const updated = {
+              ...prev,
+              [agentId]: { ...prev[agentId], status, statusMessage: message }
+            };
+            console.log('[前端] 更新后的 agents:', Object.keys(updated), updated[agentId]);
+            return updated;
+          });
+        });
+
+        socketRef.current.on('token-usage', (usage) => {
+          console.log('[前端] 收到 token-usage:', usage);
+          setTokenUsage(usage);
+
+          // 更新每分钟使用历史
+          const now = new Date();
+          const minuteKey = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes()).getTime();
+
+          setUsageHistory(prev => {
+            const lastEntry = prev[prev.length - 1];
+            if (lastEntry && lastEntry.minute === minuteKey) {
+              // 更新当前分钟
+              return [...prev.slice(0, -1), { minute: minuteKey, tokens: usage.total }];
+            } else {
+              // 添加新分钟
+              return [...prev, { minute: minuteKey, tokens: usage.total }].slice(-20); // 保留最近20分钟
+            }
+          });
+        });
 
         return () => { socketRef.current?.disconnect(); };
       }, []);
@@ -1918,6 +3562,11 @@
             .catch(err => console.error('加载消息失败:', err));
           // 加载待确认工具
           loadPendingTool(threadId);
+          // 加载角色配置
+          fetch(`/api/threads/${threadId}/roles`)
+            .then(res => res.json())
+            .then(data => setThreadRoles(data || {}))
+            .catch(err => console.error('加载角色配置失败:', err));
         }
       }, [threadId]);
 
@@ -1933,24 +3582,89 @@
       }, [messages, streamingContent]);
 
       const handleSend = async (text) => {
-        setLoading(true);
+        // Steering 模式：检查是否有选中的猫咪（通过复选框）
+        const selectedAgentIds = Object.keys(agents).filter(id => agents[id].selected);
+
+        let targetAgents = null;
+
+        if (selectedAgentIds.length > 0) {
+          // 如果有复选框选中的猫咪，过滤掉已经在运行的
+          const availableAgentIds = selectedAgentIds.filter(id => !runningAgents[id]);
+          if (availableAgentIds.length === 0) {
+            console.log('所有选中的猫咪都在运行中');
+            return;
+          }
+          targetAgents = availableAgentIds;
+        }
+        // 如果没有复选框选中，targetAgents 保持 null，让后端解析 @mentions
+
         try {
           await fetch(`/api/threads/${threadId}/invoke`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text })
+            body: JSON.stringify({ message: text, agents: targetAgents })
           });
         } catch (err) {
           console.error('发送失败:', err);
-          setLoading(false);
         }
       };
 
-      const handleStop = async () => {
+      // Steering 模式：切换猫咪选择
+      const toggleAgentSelection = (agentId) => {
+        setAgents(prev => ({
+          ...prev,
+          [agentId]: {
+            ...prev[agentId],
+            selected: !prev[agentId]?.selected
+          }
+        }));
+      };
+
+      // Steering 模式：停止单只猫咪
+      const handleStopAgent = async (agentId) => {
+        // 从 runningAgents 中移除
+        setRunningAgents(prev => {
+          const updated = { ...prev };
+          delete updated[agentId];
+          // 如果没有猫咪在运行了，设置 loading 为 false
+          if (Object.keys(updated).length === 0) {
+            setLoading(false);
+          }
+          return updated;
+        });
+        // 更新 agent 状态
+        setAgents(prev => ({
+          ...prev,
+          [agentId]: {
+            ...prev[agentId],
+            status: 'idle',
+            statusMessage: '已停止'
+          }
+        }));
+        // 发送停止请求
         await fetch(`/api/threads/${threadId}/stop`, { method: 'POST' });
+      };
+
+      const handleStop = async () => {
+        // 停止所有运行中的猫咪
+        const runningIds = Object.keys(runningAgents);
+        for (const agentId of runningIds) {
+          await fetch(`/api/threads/${threadId}/stop`, { method: 'POST' });
+        }
+        setRunningAgents({});
         setLoading(false);
         setStreamingContent('');
         setCurrentAgent(null);
+        // 重置所有 agent 状态
+        setAgents(prev => {
+          const updated = { ...prev };
+          runningIds.forEach(id => {
+            if (updated[id]) {
+              updated[id] = { ...updated[id], status: 'idle', statusMessage: '已停止' };
+            }
+          });
+          return updated;
+        });
       };
 
       const handleCreateThread = async (title) => {
@@ -2006,9 +3720,24 @@
       const handleDeleteAgent = async (id) => {
         if (!confirm('确定要删除这只猫咪吗？')) return;
         try {
-          await fetch(`/api/agents/${id}`, { method: 'DELETE' });
+          const res = await fetch(`/api/agents/${id}`, { method: 'DELETE' });
+          if (res.ok) {
+            // 从本地状态立即移除
+            setAgents(prev => {
+              const updated = { ...prev };
+              delete updated[id];
+              return updated;
+            });
+          } else {
+            const data = await res.json().catch(() => ({}));
+            alert(`删除失败: ${data.error || res.statusText}`);
+          }
+          // 无论如何都刷新一下
           loadAgents();
-        } catch (err) { console.error('删除猫咪失败:', err); }
+        } catch (err) {
+          console.error('删除猫咪失败:', err);
+          alert('删除猫咪失败: ' + err.message);
+        }
       };
 
       const handleAddVocab = async (word, pronunciation) => {
@@ -2078,6 +3807,24 @@
         } catch (err) { console.error('清除待确认工具失败:', err); }
       };
 
+      // 确认执行待确认工具（发送确认消息）
+      const handleConfirmPendingTool = async () => {
+        if (!pendingTool) return;
+        try {
+          // 发送确认消息
+          await fetch(`/api/threads/${threadId}/invoke`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              message: '确认执行',
+              agents: [pendingTool.agentId]
+            })
+          });
+          setPendingTool(null);
+        } catch (err) { console.error('确认执行失败:', err); }
+      };
+
       // 清除会话状态
       const handleClearSession = async (tid) => {
         if (!confirm('确定要清除会话状态吗？这将清除待确认的操作。')) return;
@@ -2085,7 +3832,115 @@
           await fetch(`/api/threads/${tid}/session`, { method: 'DELETE' });
           setPendingTool(null);
         } catch (err) { console.error('清除会话失败:', err); }
-      };;
+      };
+
+      // MCP 服务器操作
+      const handleAddMcpServer = async (config) => {
+        try {
+          await fetch('/api/mcp/servers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+          });
+          loadMcpServers();
+        } catch (err) { console.error('添加 MCP 服务器失败:', err); }
+      };
+
+      const handleDeleteMcpServer = async (serverId) => {
+        if (!confirm('确定要删除这个 MCP 服务器吗？')) return;
+        try {
+          await fetch(`/api/mcp/servers/${serverId}`, { method: 'DELETE' });
+          loadMcpServers();
+          loadMcpTools();
+        } catch (err) { console.error('删除 MCP 服务器失败:', err); }
+      };
+
+      const handleStartMcpServer = async (serverId) => {
+        try {
+          await fetch(`/api/mcp/servers/${serverId}/start`, { method: 'POST' });
+          loadMcpServers();
+          setTimeout(() => { loadMcpTools(); }, 1000); // 稍后刷新工具列表
+        } catch (err) { console.error('启动 MCP 服务器失败:', err); }
+      };
+
+      const handleStopMcpServer = async (serverId) => {
+        try {
+          await fetch(`/api/mcp/servers/${serverId}/stop`, { method: 'POST' });
+          loadMcpServers();
+          loadMcpTools();
+        } catch (err) { console.error('停止 MCP 服务器失败:', err); }
+      };
+
+      // Skill 操作
+      const handleAddSkill = async (config) => {
+        try {
+          const endpoint = config.templateId ? '/api/skills/from-template' : '/api/skills';
+          await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+          });
+          loadSkills();
+        } catch (err) { console.error('添加 Skill 失败:', err); }
+      };
+
+      const handleDeleteSkill = async (skillId) => {
+        if (!confirm('确定要删除这个 Skill 吗？')) return;
+        try {
+          await fetch(`/api/skills/${skillId}`, { method: 'DELETE' });
+          loadSkills();
+        } catch (err) { console.error('删除 Skill 失败:', err); }
+      };
+
+      const handleExecuteSkill = async (skillId) => {
+        try {
+          const res = await fetch(`/api/skills/${skillId}/execute`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ params: {} })
+          });
+          const result = await res.json();
+          console.log('Skill 执行结果:', result);
+          alert(`执行结果: ${JSON.stringify(result, null, 2)}`);
+        } catch (err) { console.error('执行 Skill 失败:', err); }
+      };
+
+      // 工具授权操作
+      const handleUpdateAgentTools = async (agentId, tools) => {
+        try {
+          await fetch(`/api/agents/${agentId}/tools`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(tools)
+          });
+          setAgentToolsAuth(prev => ({ ...prev, [agentId]: tools }));
+        } catch (err) { console.error('更新工具授权失败:', err); }
+      };
+
+      // Skill 授权操作（按 Skill 维度）
+      const handleUpdateSkillAssignment = async (skillId, agentIds) => {
+        try {
+          await fetch(`/api/skills/${skillId}/agents`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agentIds })
+          });
+          // 更新本地状态
+          loadSkillAssignments();
+        } catch (err) { console.error('更新 Skill 授权失败:', err); }
+      };
+
+      const loadAgentToolsAuth = async (agentId) => {
+        try {
+          const res = await fetch(`/api/agents/${agentId}/tools`);
+          const data = await res.json();
+          setAgentToolsAuth(prev => ({ ...prev, [agentId]: data }));
+          return data;
+        } catch (err) {
+          console.error('加载工具授权失败:', err);
+          return { mcpTools: [], skills: [] };
+        }
+      };
 
       const currentThread = threads.find(t => t.id === threadId);
 
@@ -2097,44 +3952,74 @@
               <p>与可爱的猫咪们聊天吧</p>
             </div>
 
-            <TokenPanel usage={tokenUsage} />
+            <div className="sidebar-content">
+              <TokenPanel usage={tokenUsage} usageHistory={usageHistory} />
 
-            <button className="new-thread-btn" onClick={() => setShowCreateModal(true)}>
-              + 新建对话
-            </button>
+              <button className="new-thread-btn" onClick={() => setShowCreateModal(true)}>
+                + 新建对话
+              </button>
 
-            <ThreadList threads={threads} activeThreadId={threadId}
-              onSelect={setThreadId} onDelete={handleDeleteThread}
-              onArchive={handleArchiveThread} onRename={setRenameThread} />
+              <ThreadList threads={threads} activeThreadId={threadId}
+                onSelect={setThreadId} onDelete={handleDeleteThread}
+                onArchive={handleArchiveThread} onRename={setRenameThread} />
 
-            <AgentPanel agents={agents} onDelete={handleDeleteAgent} onAdd={handleRegisterAgent} />
+              <AgentPanel
+                agents={agents}
+                onDelete={handleDeleteAgent}
+                onAdd={handleRegisterAgent}
+                runningAgents={runningAgents}
+                onToggleSelection={toggleAgentSelection}
+                onStopAgent={handleStopAgent}
+              />
 
-            <VoiceSettingsPanel autoSpeak={autoSpeak} setAutoSpeak={setAutoSpeak} />
+              <VoiceSettingsPanel autoSpeak={autoSpeak} setAutoSpeak={setAutoSpeak} />
 
-            <VocabularyPanel
-              vocabulary={vocabulary}
-              onAdd={handleAddVocab}
-              onDelete={handleDeleteVocab}
-            />
+              <VocabularyPanel
+                vocabulary={vocabulary}
+                onAdd={handleAddVocab}
+                onDelete={handleDeleteVocab}
+              />
 
-            <MemoryPanel
-              agentId={currentAgent?.id || 'opus'}
-              memory={agentMemory}
-              onAdd={handleAddMemory}
-              onDelete={handleDeleteMemory}
-            />
+              <MemoryPanel
+                agentId={currentAgent?.id || 'opus'}
+                memory={agentMemory}
+                onAdd={handleAddMemory}
+                onDelete={handleDeleteMemory}
+              />
 
-            <SessionControls threadId={threadId} onClear={handleClearSession} />
+              <SessionControls threadId={threadId} onClear={handleClearSession} />
+            </div>
           </div>
 
           <div className="chat-area">
             {threadId ? (
               <>
                 <div className="chat-header">
-                  <h2>{currentThread?.title || '新对话'}</h2>
+                  <div>
+                    <h2>{currentThread?.title || '新对话'}</h2>
+                    {Object.keys(threadRoles).length > 0 && (
+                      <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                        {Object.entries(threadRoles).map(([agentId, role]) => {
+                          const agent = agents[agentId];
+                          return agent ? `${agent.name}: ${role}` : null;
+                        }).filter(Boolean).join(' | ')}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    className="roles-config-btn"
+                    onClick={() => setShowRolesModal(true)}
+                    title="配置对话角色"
+                  >
+                    🎭
+                  </button>
                 </div>
 
-                <PendingToolBanner pendingTool={pendingTool} onClear={handleClearPendingTool} />
+                <PendingToolBanner
+                  pendingTool={pendingTool}
+                  onConfirm={handleConfirmPendingTool}
+                  onClear={handleClearPendingTool}
+                />
 
                 <div className="messages-container">
                   {messages.map(msg => (
@@ -2162,8 +4047,42 @@
                       autoSpeak={false}
                     />
                   )}
-                  {/* 加载中但还没开始输出时，显示实时过程日志 */}
-                  {loading && !streamingContent && currentAgent && (
+                  {/* Steering 模式：显示所有运行中猫咪的状态 */}
+                  {Object.entries(runningAgents).map(([agentId, data]) => {
+                    const agentInfo = agents[agentId] || data.agent;
+                    return (
+                      <div key={agentId} className="message-bubble steering-agent" data-agent={agentId}>
+                        <div className="message-avatar">{agentInfo?.avatar || '🐱'}</div>
+                        <div className="message-content">
+                          <div className="message-sender-wrapper">
+                            <div className="message-sender">{agentInfo?.name || agentId}</div>
+                            {data.caller && (
+                              <span className="a2a-indicator">
+                                <span className="arrow">←</span>
+                                {data.caller.avatar} {data.caller.name} 呼叫
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ padding: '8px 0', color: '#666', fontSize: 13 }}>
+                            {data.agentStatus === 'thinking' ? '💭 正在思考...' :
+                             data.agentStatus === 'tool' ? '🔧 使用工具中...' :
+                             data.agentStatus === 'streaming' ? '✍️ 正在回复...' :
+                             data.agentStatus === 'retry' ? '⏳ 重试中...' : '⏳ 处理中...'}
+                            {data.processLogs && data.processLogs.length > 0 && (
+                              <span style={{ marginLeft: 8, color: '#667eea' }}>
+                                ({data.processLogs.length} 条思考记录)
+                              </span>
+                            )}
+                          </div>
+                          {data.processLogs && data.processLogs.length > 0 && (
+                            <ProcessLogPanel logs={data.processLogs} isLive={true} />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {/* 兼容旧模式：如果没有 runningAgents 但有 currentAgent */}
+                  {loading && !streamingContent && currentAgent && Object.keys(runningAgents).length === 0 && (
                     <div className="message-bubble">
                       <div className="message-avatar">{currentAgent?.avatar || '🐱'}</div>
                       <div className="message-content">
@@ -2193,8 +4112,14 @@
                   <div ref={messagesEndRef} />
                 </div>
 
+                <RunningAgentsIndicator
+                  runningAgents={runningAgents}
+                  agents={agents}
+                  onStopAgent={handleStop}
+                />
+
                 <div className="input-area">
-                  <InputBox onSend={handleSend} disabled={loading} onStop={handleStop} showStop={loading} />
+                  <InputBox onSend={handleSend} disabled={false} onStop={handleStop} showStop={isAnyAgentRunning} agents={agents} />
                 </div>
               </>
             ) : (
@@ -2205,6 +4130,27 @@
             )}
           </div>
 
+          {/* 右侧工具栏 */}
+          <RightSidebar
+            mcpServers={mcpServers}
+            onAddMcpServer={handleAddMcpServer}
+            onDeleteMcpServer={handleDeleteMcpServer}
+            onStartMcpServer={handleStartMcpServer}
+            onStopMcpServer={handleStopMcpServer}
+            skills={skills}
+            skillTemplates={skillTemplates}
+            onAddSkill={handleAddSkill}
+            onDeleteSkill={handleDeleteSkill}
+            onExecuteSkill={handleExecuteSkill}
+            agents={agents}
+            skillAssignments={skillAssignments}
+            onUpdateSkillAssignment={handleUpdateSkillAssignment}
+            currentAgent={currentAgent}
+            mcpTools={mcpTools}
+            agentToolsAuth={agentToolsAuth}
+            onUpdateAgentTools={handleUpdateAgentTools}
+          />
+
           {showCreateModal && (
             <CreateThreadModal onClose={() => setShowCreateModal(false)} onCreate={handleCreateThread} />
           )}
@@ -2214,6 +4160,16 @@
               thread={renameThread}
               onClose={() => setRenameThread(null)}
               onRename={handleRenameThread}
+            />
+          )}
+
+          {showRolesModal && (
+            <RolesConfigModal
+              threadId={threadId}
+              roles={threadRoles}
+              agents={agents}
+              onClose={() => setShowRolesModal(false)}
+              onSave={(roles) => setThreadRoles(roles)}
             />
           )}
         </>
